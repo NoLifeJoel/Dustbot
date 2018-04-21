@@ -7,7 +7,6 @@ let streams = { };
 function streamLoop () {
   twitch.streams.getStreams({
     "game_id": [
-     //'490713', // Undertale, used for testing purposes since it's more active.
      '29093' // Dustforce.
     ],
     "type": 'live'
@@ -37,7 +36,7 @@ function streamLoop () {
     for (let stream of res) {
       if (typeof streams[stream["id"]]["url"] === 'undefined') {
         if (startup === true) {
-          streamEmitter.emit('stream', {
+          streamEmitter.emit('dustforceStream', {
             "url": 'https://www.twitch.tv/' + stream["login"],
             "title": streams[stream["id"]]["title"],
             "id": stream["id"]
@@ -48,7 +47,7 @@ function streamLoop () {
     }
     return;
   }).catch((e) => {
-    //console.log(e);
+    console.error(e);
   }).then(() => {
     if (startup === false) {
       startup = true;

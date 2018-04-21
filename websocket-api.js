@@ -6,7 +6,7 @@ const wss = new WebSocket.Server({
 const clientToken = require('./../tokens')["api-client"];
 const clientIPs = { };
 let lastID = 0;
-let discord = { };
+let dustforceDiscord = { };
 const pushEvent = (event, msg) => {
   if (typeof event !== 'string') {
     return;
@@ -23,9 +23,9 @@ const pushEvent = (event, msg) => {
   }
 }
 let exportObj = {
-  "discord": discord,
+  "dustforceDiscord": dustforceDiscord,
   "pushEvent": pushEvent,
-  "getStreams": null
+  "getDustforceStreams": null
 };
 wss.on('connection', (ws, req) => {
   console.log(req.headers);
@@ -74,7 +74,7 @@ wss.on('connection', (ws, req) => {
         console.log(message);
       }
       if (typeof message.token !== 'undefined' && typeof req.headers["X-Real-IP"] !== 'undefined') {
-        if (clientIPs[req.headers["X-Real-IP"]].tokenFailed > 0) {
+        if (clientIPs[req.headers["X-Real-IP"]]["tokenFailed"] > 0) {
           clientSend({
             "event": 'tokenRequestFailed',
             "message": 'You recently failed to guess the client token correctly. You can try again from this IP in approximately ' + clientIPs[req.headers["X-Real-IP"]].tokenFailed + ' minutes.'
@@ -85,7 +85,7 @@ wss.on('connection', (ws, req) => {
             "event": 'tokenRequestFailed',
             "message": 'You guessed the client token incorrectly. You can try again from this IP in approximately 15 minutes.'
           });
-          clientIPs[req.headers["X-Real-IP"]].tokenFailed = 15;
+          clientIPs[req.headers["X-Real-IP"]]["tokenFailed"] = 15;
           return;
         }
       }
@@ -116,13 +116,14 @@ wss.on('connection', (ws, req) => {
             "message": ws.id
           });
         break;
-        case 'discordSend':
-          if (typeof discord.send === 'function') {
+        case 'dustforceDiscordSend':
+          if (typeof dustforceDiscord.send === 'function') {
             if (typeof message.message === 'string' && typeof message.token === 'string') {
-              discord.send(message.message).then((discordMessage) => {
+              dustforceDiscord.send(message.message).then((discordMessage) => {
                 let sendObj = {
                   "event": 'discordMessageSent',
                   "message": {
+                    "server": 'Dustforce',
                     "discordMessage": {
                       "id": discordMessage.id
                     }
@@ -139,15 +140,18 @@ wss.on('connection', (ws, req) => {
           } else {
             clientSend({
               "event": 'error',
-              "message": 'Discord client doesn\'t appear to be ready.'
+              "message": {
+                "server": 'Dustforce',
+                "message": 'discord client doesn\'t appear to be ready.'
+              }
             });
           }
         break;
-        case 'getStreams':
-          if (typeof exportObj.getStreams === 'function') {
+        case 'getDustforceStreams':
+          if (typeof exportObj.getDustforceStreams === 'function') {
             clientSend({
-              "event": 'getStreams',
-              "message": exportObj.getStreams()
+              "event": 'getDustforceStreams',
+              "message": exportObj.getDustforceStreams()
             });
           }
         break;

@@ -19,34 +19,34 @@ const connect = () => {
   ws.on('open', () => {
     console.log('Connection open.');
     /*send({
-      "action": 'discordSend',
+      "action": 'dustforceDiscordSend',
       "message": 'hi',
       "token": token,
       "id": msgID // Optional parameter, in case you need to track the message.
     });*/
     send({
       "action": 'subscribe',
-      "message": 'reactionAdd'
+      "message": 'dustforceDiscordReactionAdd'
     });
     send({
       "action": 'subscribe',
-      "message": 'reactionRemove'
+      "message": 'dustforceDiscordReactionRemove'
     });
     send({
       "action": 'subscribe',
-      "message": 'messageAdd'
+      "message": 'dustforceDiscordMessageAdd'
     });
     send({
       "action": 'subscribe',
-      "message": 'messageDelete'
+      "message": 'dustfoceDiscordMessageDelete'
     });
     send({
       "action": 'subscribe',
-      "message": 'streamAdded'
+      "message": 'dustforceDiscordStreamAdded'
     });
     send({
       "action": 'subscribe',
-      "message": 'streamDeleted'
+      "message": 'dustforceDiscordStreamDeleted'
     });
     send({
       "action": 'getSubscribed'

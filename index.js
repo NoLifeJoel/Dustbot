@@ -6,7 +6,6 @@
         "discord": 'token', // Client token from the discord website in the developers section.
         "api-client": 'token' // Set this to something random for incoming websocket connections that should be allowed to send messages through your discord bot.
       }
-      // I do this so that I don't accidentally do something dumb like commit a token to github.
     Dependencies from npm:
       discord.js,
       ws,
@@ -14,53 +13,60 @@
     Highly recommended:
       Proxy the websocket server with SSL (nginx works well for me), or at the very least google the ws library and figure out how to implement SSL.
 */
-const discordjs = require('discord.js');
-const discord = new discordjs.Client();
-const token = require('./../tokens')["discord"];
+const Discord = require('discord.js');
+const dustforceDiscord = new Discord.Client();
+const token = require('./../tokens')["dustforce-discord"];
 const wsAPI = require('./websocket-api');
 const twitch = require('./twitch-helix');
+const replays = require('./replays');
+const replayTools = require('./replayTools');
 wsAPI.getStreams = twitch.getStreams;
-const generalChannel = {
-  "id": '423903301093031966',
-  "send": (msg) => {
+class DustforceDiscordChannel {
+  constructor (id, name) {
+    this.id = id;
+    this.name = name;
+  }
+  send (msg) {
     return new Promise ((resolve, reject) => {
-      if (discord.ws.connection !== null && discord.status === 0) {
-        let channel = discord.channels.get(generalChannel.id);
+      if (dustforceDiscord.ws.connection !== null && dustforceDiscord.status === 0) {
+        let channel = dustforceDiscord.channels.get(this.id);
         if (typeof channel !== 'undefined') {
           resolve(channel.send(msg));
         } else {
-          reject('Discord connection open, but general channel wasn\'t found.');
+          reject('Discord connection open, but ' + this.name + ' channel wasn\'t found.');
         }
       } else {
-        reject('Discord connection not open. (Tried to send message to general channel)');
+        reject('Discord connection not open. (Tried to send message to ' + this.name + ' channel)');
       }
     });
   }
-};
+}
+const dustforceGeneralChannel = new DustforceDiscordChannel('423903301093031966', 'general');
+const dustforceLeaderboardsChannel = new DustforceDiscordChannel('423903301093031966', 'leaderboard-updates');
 setTimeout(() => {
-  discord.login(token);
+  dustforceDiscord.login(token);
 }, 5000);
-twitch.on('stream', (stream) => {
-  generalChannel.send('<' + stream.url + '> went live: ' + stream.title).then((message) => {
+twitch.on('dustforceStream', (stream) => {
+  dustforceGeneralChannel.send('<' + stream.url + '> went live: ' + stream.title).then((message) => {
     //console.log(message);
   }).catch((e) => {
-    //
+    console.error(e);
   });
   wsAPI.pushEvent('streamAdded', stream);
 });
 twitch.on('streamDeleted', (stream) => {
   wsAPI.pushEvent('streamDeleted', stream);
 });
-discord.on('ready', () => {
-  discord.user.setPresence({
+dustforceDiscord.on('ready', () => {
+  dustforceDiscord.user.setPresence({
     "status": 'online',
     "game": {
       "name": 'Dustforce'
     }
   });
 });
-discord.on('message', (message) => {
-  if (message.channel.id === generalChannel.id && (message.content === '.streams' || message.content === '!streams')) {
+dustforceDiscord.on('message', (message) => {
+  if (message.channel.id === dustforceGeneralChannel.id && (message.content === '.streams' || message.content === '!streams')) {
     let streams = twitch.getStreams();
     if (Object.keys(streams).length === 0) {
       message.channel.send('Nobody is streaming.');
@@ -79,7 +85,7 @@ discord.on('message', (message) => {
       }
     }
   }
-  wsAPI.pushEvent('messageAdd', {
+  wsAPI.pushEvent('dustforceDiscordMessageAdd', {
     "channel": {
       "id": message.channel.id,
       "name": message.channel.name,
@@ -99,8 +105,8 @@ discord.on('message', (message) => {
     }
   });
 });
-discord.on('messageDelete', (message) => {
-  wsAPI.pushEvent('messageDelete', {
+dustforceDiscord.on('messageDelete', (message) => {
+  wsAPI.pushEvent('dustforceDiscordMessageDelete', {
     "channel": {
       "id": message.channel.id,
       "name": message.channel.name,
@@ -120,9 +126,9 @@ discord.on('messageDelete', (message) => {
     }
   });
 });
-discord.on('messageReactionAdd', (reaction, user) => {
+dustforceDiscord.on('messageReactionAdd', (reaction, user) => {
   if (reaction.message.channel.type === 'text') {
-    wsAPI.pushEvent('reactionAdd', {
+    wsAPI.pushEvent('dustforceDiscordReactionAdd', {
       "message": {
         "id": reaction.message.id,
         "content": reaction.message.content,
@@ -145,7 +151,7 @@ discord.on('messageReactionAdd', (reaction, user) => {
         "type": reaction.message.channel.type
       }
     });
-    wsAPI.pushEvent('reactionRemove', {
+    wsAPI.pushEvent('dustforceDiscordReactionRemove', {
       "message": {
         "id": reaction.message.id,
         "content": reaction.message.content,
@@ -169,6 +175,69 @@ discord.on('messageReactionAdd', (reaction, user) => {
     });
   }
 });
-wsAPI.discord.send = (msg) => {
-  return generalChannel.send(msg);
+wsAPI.dustforceDiscord.generalSend = (msg) => {
+  return dustforceGeneralChannel.send(msg);
+}
+replays.on('replay', (replay) => {
+  wsAPI.pushEvent('dustforceReplay', replay);
+  replay.character = Number(replay.character);
+  if (typeof replayTools["level_thumbnails"][replay.level_name] !== 'undefined') {
+    if (replay.score_rank_pb) {
+      let previous = '';
+      if (typeof replay["previous_score_pb"] !== 'undefined') {
+        previous = replay["previous_score_pb"];
+      }
+      createReplayMessage(replay, "Score", previous);
+    }
+    if (replay.time_rank_pb) {
+      let previous = '';
+      if (typeof replay["previous_time_pb"] !== 'undefined') {
+        previous = replay["previous_time_pb"];
+      }
+      createReplayMessage(replay, "Time", previous);
+    }
+  }
+});
+function createReplayMessage (replay, type, previous) {
+  const lowercaseType = type.toLowerCase();
+  const colors = [ 8493779, 12147535, 11829461, 9874791 ];
+  const characterIcons = [ '401402235004911616', '401402216272887808', '401402223357329418', '401402248040546315' ];
+  const camera = '[<:camera:401772771908255755>](http://dustkid.com/replay/' + replay.replay_id + ')';
+  const usernameWrapper = '**[' + replay.username + '](http://dustkid.com/profile/' + replay.user_id + '/)**';
+  const spaces = '       ';
+  let tied_with = '';
+  if (replay[lowercaseType + "_rank"] !== replay[lowercaseType + "_tied_with"]) {
+    tied_with = ' (' + (replay[lowercaseType + "_rank"] - replay[lowercaseType + "_tied_with"] + 1).toString() + '-way tie)';
+  }
+  let previousTime = '';
+  let previousRank = '';
+  if (typeof previous === 'object') {
+    if (previous[lowercaseType + "_rank"] !== replay[lowercaseType + "_rank"]) {
+      previousRank = ' _' + replayTools.rankToStr(previous[lowercaseType + "_rank"]) + '_  ->';
+    }
+    if (previous["time"] !== replay["time"]) {
+      previousTime = ' _' + replayTools.parseTime(previous["time"]) + '_  ->';
+    }
+  }
+  let replayMessage = {
+    "embed": {
+      "color": colors[replay.character],
+      "author": {
+        "name": replay.level_clean_name + ' - ' + type,
+        "url": 'http://dustkid.com/level/' + replay.level_name,
+        "icon_url": "https://cdn.discordapp.com/emojis/" + characterIcons[replay.character] + ".png"
+      },
+      "thumbnail": {
+        "url": "https://i.imgur.com/" + replayTools["level_thumbnails"][replay.level_name] + ".png"
+      },
+      "description": camera + ' ' + usernameWrapper + '\n' +
+        spaces + replayTools.scoreToIcon(replay.completion) + previousRank + ' _' + replayTools.rankToStr(replay[lowercaseType + "_rank"]) + '_' + tied_with + '\n' +
+        spaces + replayTools.scoreToIcon(replay.finesse) + previousTime + ' _' + replayTools.parseTime(replay.time) + '_',
+      "footer": {
+        "text": 'Time'
+      },
+      "timestamp": new Date(Number(replay.timestamp) * 1000)
+    }
+  };
+  dustforceGeneralChannel.send(replayMessage);
 }
