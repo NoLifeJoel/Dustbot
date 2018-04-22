@@ -217,6 +217,7 @@ wsAPI.dustforceDiscord.generalSend = (msg) => {
   return dustforceGeneralChannel.send(msg);
 }
 replays.on('replay', (replay) => {
+  console.log(replay.replay_id);
   wsAPI.pushEvent('dustforceReplay', replay);
   replay.character = Number(replay.character);
   if (typeof replayTools["level_thumbnails"][replay.level_name] !== 'undefined') {
