@@ -150,18 +150,22 @@ function getReplay (replay_id, loop=false) {
         console.error(error);
       });
     }
+    return true;
   }).catch((error) => {
     return new Promise((resolve, reject) => {
       if (error.message !== 'Replay not found.') {
         console.error(error);
       }
       setTimeout(() => {
-        resolve();
+        resolve(false);
       }, 10000);
     });
-  }).then(() => {
+  }).then((finished) => {
+    if (finished) {
+      replay_id++;
+    }
     if (loop) {
-      getReplay(++replay_id, true);
+      getReplay(replay_id, true);
     }
   });
 }

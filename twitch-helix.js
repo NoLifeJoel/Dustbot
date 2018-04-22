@@ -7,7 +7,7 @@ let streams = { };
 function streamLoop () {
   twitch.streams.getStreams({
     "game_id": [
-     '29093' // Dustforce.
+     '29093'
     ],
     "type": 'live'
   }).then((data) => {
@@ -39,11 +39,15 @@ function streamLoop () {
           streamEmitter.emit('dustforceStream', {
             "url": 'https://www.twitch.tv/' + stream["login"],
             "title": streams[stream["id"]]["title"],
-            "id": stream["id"]
+            "id": stream["id"],
+            "display_name": stream["display_name"],
+            "login": stream["login"]
           });
         }
       }
       streams[stream["id"]]["url"] = 'https://www.twitch.tv/' + stream["login"];
+      streams[stream["id"]]["display_name"] = stream["display_name"];
+      streams[stream["id"]]["login"] = stream["login"];
     }
     return;
   }).catch((e) => {
@@ -61,7 +65,7 @@ setInterval(() => {
     streams[stream]["timer"]--;
     if (streams[stream]["timer"] < 1) {
       if (typeof streams[stream]["url"] !== 'undefined' && typeof streams[stream]["title"] !== 'undefined') {
-        streamEmitter.emit('streamDeleted', {
+        streamEmitter.emit('dustforceStreamDeleted', {
           "url": streams[stream]["url"],
           "title": streams[stream]["title"],
           "id": stream

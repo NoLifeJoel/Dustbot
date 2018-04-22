@@ -172,12 +172,17 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     try {
       delete ws;
-    } catch (e) { }
+    } catch (e) {
+      console.error(e);
+    }
   });
-  ws.on('error', () => {
+  ws.on('error', (err) => {
+    console.error(err);
     try {
       delete ws;
-    } catch (e) { }
+    } catch (e) {
+      console.error(e);
+    }
   })
 });
 setInterval(() => {
