@@ -41,8 +41,8 @@ class DustforceDiscordChannel {
     });
   }
 }
-const dustforceGeneralChannel = new DustforceDiscordChannel('423903301093031966', 'general');
-const dustforceLeaderboardsChannel = new DustforceDiscordChannel('423903301093031966', 'leaderboard-updates');
+const dustforceGeneralChannel = new DustforceDiscordChannel('276106941875355658', 'general');
+const dustforceLeaderboardsChannel = new DustforceDiscordChannel('204159286966747136', 'leaderboard-updates');
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);
@@ -217,18 +217,17 @@ wsAPI.dustforceDiscord.generalSend = (msg) => {
   return dustforceGeneralChannel.send(msg);
 }
 replays.on('replay', (replay) => {
-  console.log(replay);
   wsAPI.pushEvent('dustforceReplay', replay);
   replay.character = Number(replay.character);
   if (typeof replayTools["level_thumbnails"][replay.level_name] !== 'undefined') {
-    if (replay.score_rank_pb && replay.score_tied_with < 101) {
+    if (replay.score_rank_pb && replay.score_tied_with < 11) {
       let previous = '';
       if (typeof replay["previous_score_pb"] !== 'undefined') {
         previous = replay["previous_score_pb"];
       }
       createReplayMessage(replay, "Score", previous);
     }
-    if (replay.time_rank_pb && replay.time_tied_with < 101) {
+    if (replay.time_rank_pb && replay.time_tied_with < 11) {
       let previous = '';
       if (typeof replay["previous_time_pb"] !== 'undefined') {
         previous = replay["previous_time_pb"];
@@ -274,7 +273,7 @@ function createReplayMessage (replay, type, previous) {
         spaces + replayTools.scoreToIcon(replay.completion) + previousRank + ' _' + replayTools.rankToStr(replay[lowercaseType + "_tied_with"]) + '_' + x_way_tie + '\n' +
         spaces + replayTools.scoreToIcon(replay.finesse) + previousTime + ' _' + replayTools.parseTime(replay.time) + '_',
       "footer": {
-        "text": 'Time'
+        "text": 'Date'
       },
       "timestamp": new Date(Number(replay.timestamp) * 1000)
     }

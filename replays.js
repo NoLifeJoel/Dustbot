@@ -158,7 +158,7 @@ function getReplay (replay_id, loop=false) {
       }
       setTimeout(() => {
         resolve(false);
-      }, 10000);
+      }, 30000);
     });
   }).then((finished) => {
     if (finished) {
