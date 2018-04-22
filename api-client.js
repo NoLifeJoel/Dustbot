@@ -49,8 +49,12 @@ const connect = () => {
       "message": 'dustforceDiscordStreamDeleted'
     });
     send({
+      "action": 'subscribe',
+      "message": 'dustforceReplay'
+    });
+    send({
       "action": 'getSubscribed'
-    })
+    });
   });
   ws.on('message', (msg) => {
     try {
