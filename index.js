@@ -279,5 +279,5 @@ function createReplayMessage (replay, type, previous) {
       "timestamp": new Date(Number(replay.timestamp) * 1000)
     }
   };
-  dustforceGeneralChannel.send(replayMessage);
+  dustforceLeaderboardsChannel.send(replayMessage);
 }
