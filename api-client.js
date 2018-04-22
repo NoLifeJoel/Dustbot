@@ -89,3 +89,4 @@ module.exports = {
     send(msg);
   }
 }
+//{"action":"subscribe","message":"dustforceReplay"}

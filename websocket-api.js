@@ -13,7 +13,7 @@ const pushEvent = (event, msg) => {
   }
   if (typeof wss.clients !== 'undefined') {
     wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN && client.subscribedEvents.indexOf(msg.eventName) !== -1) {
+      if (client.readyState === WebSocket.OPEN && client.subscribedEvents.indexOf(event) !== -1) {
         client.send(JSON.stringify({
           "event": event,
           "message": msg
