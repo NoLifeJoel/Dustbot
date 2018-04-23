@@ -247,7 +247,7 @@ function createReplayMessage (replay, type, previous) {
   let x_way_tie = '';
   if (replay[lowercaseType + "_rank"] !== replay[lowercaseType + "_tied_with"]) {
     x_way_tie = (replay[lowercaseType + "_rank"] - replay[lowercaseType + "_tied_with"] + 1);
-    x_way_tie = ' (' + way_tie.toString() + '-way tie)';
+    x_way_tie = ' (' + x_way_tie.toString() + '-way tie)';
   }
   let previousTime = '';
   let previousRank = '';
