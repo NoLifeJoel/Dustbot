@@ -65,30 +65,21 @@ dustforceDiscord.on('ready', () => {
     }
   });
 });
-function toWeirdCase (str) {
-  return str.split('').map((v,i) => i % 2 ? v.toLowerCase() : v.toUpperCase()).join('');
+function toWeirdCase (pattern, str) {
+  let caseMap = new Array(6).map((v,i) => str[i+1] == str[i+1].toLowerCase())
+  return str.split('').map((v,i) => v[i%6] ? v.toLowerCase() : v.toUpperCase()).join('');
 }
 dustforceDiscord.on('message', (message) => {
-  if (message.channel.id === dustforceGeneralChannel.id && (message.content.toLowerCase() === '.streams' || message.content.toLowerCase() === '!streams')) {
+  let streamCommandRegex = /^\.|!streams$/i;
+  let streamNotCased = /^\.|!streams$/;
+  if (message.channel.id === dustforceGeneralChannel.id && streamCommandRegex.test(message.content)) {
+    let applyWeirdCase = !streamNotCased.test(message.content);
     let streams = twitch.getStreams();
     let nobodyStreaming = 'Nobody is streaming.';
     let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
-    switch (message.content) {
-      case '.STREAMS':
-      case '!STREAMS':
-        nobodyStreaming = 'NOBODY IS STREAMING!';
-        unknownStreaming = unknownStreaming.toUpperCase();
-      break;
-      case '.sTrEaMs':
-      case '!sTrEaMs':
-      case '.StReAmS':
-      case '!StReAmS':
-        nobodyStreaming = toWeirdCase(nobodyStreaming);
-        unknownStreaming = toWeirdCase(unknownStreaming);
-      break;
-      default:
-        nobodyStreaming = 'Nobody is streaming.';
-      break;
+    if(applyWeirdCase) {
+      nobodyStreaming = toWeirdCase(message.content, nobodyStreaming)
+      unknownStreaming = toWeirdCase(message.content, unknownStreaming)
     }
     if (Object.keys(streams).length === 0) {
       message.channel.send(nobodyStreaming);
@@ -96,20 +87,8 @@ dustforceDiscord.on('message', (message) => {
       let streamsString = '';
       for (let stream of Object.keys(streams)) {
         let streamTitle = streams[stream]["title"];
-        switch (message.content) {
-          case '.STREAMS':
-          case '!STREAMS':
-            streamTitle = streams[stream]["title"].toUpperCase();
-          break;
-          case '.sTrEaMs':
-          case '!sTrEaMs':
-          case '.StReAmS':
-          case '!StReAmS':
-            streamTitle = toWeirdCase(streams[stream]["title"]);
-          break;
-          default:
-            streamTitle = streams[stream]["title"];
-          break;
+        if(applyWeirdCase) {
+          toWeirdCase(message.content, streamTitle);
         }
         if (typeof streams[stream]["login"] !== 'undefined') {
           streamsString += '<' + streams[stream]["url"] + '> - ' + streamTitle + '\n';
