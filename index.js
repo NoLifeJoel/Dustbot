@@ -66,8 +66,8 @@ dustforceDiscord.on('ready', () => {
   });
 });
 function toWeirdCase (pattern, str) {
-  let caseMap = new Array(6).map((v,i) => str[i+1] == str[i+1].toLowerCase())
-  return str.split('').map((v,i) => v[i%6] ? v.toLowerCase() : v.toUpperCase()).join('');
+  let caseMap = new Array(7).map((v,i) => str[i+1] == str[i+1].toLowerCase())
+  return str.split('').map((v,i) => v[i%7] ? v.toLowerCase() : v.toUpperCase()).join('');
 }
 dustforceDiscord.on('message', (message) => {
   let streamCommandRegex = /^\.|!streams$/i;
