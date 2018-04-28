@@ -76,9 +76,9 @@ dustforceDiscord.on('message', (message) => {
     let streams = twitch.getStreams();
     let nobodyStreaming = 'Nobody is streaming.';
     let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
-    if(applyWeirdCase) {
-      nobodyStreaming = toWeirdCase(message.content, nobodyStreaming)
-      unknownStreaming = toWeirdCase(message.content, unknownStreaming)
+    if (applyWeirdCase) {
+      nobodyStreaming = toWeirdCase(message.content, nobodyStreaming);
+      unknownStreaming = toWeirdCase(message.content, unknownStreaming);
     }
     if (Object.keys(streams).length === 0) {
       message.channel.send(nobodyStreaming);
@@ -86,7 +86,7 @@ dustforceDiscord.on('message', (message) => {
       let streamsString = '';
       for (let stream of Object.keys(streams)) {
         let streamTitle = streams[stream]["title"];
-        if(applyWeirdCase) {
+        if (applyWeirdCase) {
           toWeirdCase(message.content, streamTitle);
         }
         if (typeof streams[stream]["login"] !== 'undefined') {

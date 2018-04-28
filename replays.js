@@ -30,6 +30,9 @@ function getReplay (replay_id, loop=false) {
     if (typeof data.error !== 'undefined') {
       throw new Error(data.error);
     }
+    if (typeof data.finesse !== 'number' || data.finesse === 0) {
+      throw new Error('Replay not finished parsing.');
+    }
     return request({
       "host": 'df.hitboxteam.com',
       "path": '/backend6/get_ties.php?' + querystring.stringify({
@@ -153,7 +156,7 @@ function getReplay (replay_id, loop=false) {
     return true;
   }).catch((error) => {
     return new Promise((resolve, reject) => {
-      if (error.message !== 'Replay not found.') {
+      if (error.message !== 'Replay not found.' && error.message !== 'Replay not finished parsing.') {
         console.error(error);
       }
       setTimeout(() => {
