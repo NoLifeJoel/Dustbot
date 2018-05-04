@@ -66,11 +66,11 @@ dustforceDiscord.on('ready', () => {
   });
 });
 function toWeirdCase (pattern, str) {
-  return str.split('').map((v, i) => pattern[(i+1)%7] === pattern[(i+1)%7].toLowerCase() ? v.toLowerCase() : v.toUpperCase()).join('');
+  return str.split('').map((v, i) => pattern[i%7+1] === pattern[i%7+1].toLowerCase() ? v.toLowerCase() : v.toUpperCase()).join('');
 }
 dustforceDiscord.on('message', (message) => {
-  let streamCommandRegex = /^\.|!streams$/i;
-  let streamNotCased = /^\.|!streams$/;
+  let streamCommandRegex = /^(\.|!)streams$/i;
+  let streamNotCased = /^(\.|!)streams$/;
   if (message.channel.id === dustforceGeneralChannel.id && streamCommandRegex.test(message.content)) {
     let applyWeirdCase = !streamNotCased.test(message.content);
     let streams = twitch.getStreams();
@@ -87,7 +87,7 @@ dustforceDiscord.on('message', (message) => {
       for (let stream of Object.keys(streams)) {
         let streamTitle = streams[stream]["title"];
         if (applyWeirdCase) {
-          toWeirdCase(message.content, streamTitle);
+          streamTitle = toWeirdCase(message.content, streamTitle);
         }
         if (typeof streams[stream]["login"] !== 'undefined') {
           streamsString += '<' + streams[stream]["url"] + '> - ' + streamTitle + '\n';
