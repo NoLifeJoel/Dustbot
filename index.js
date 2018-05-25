@@ -90,6 +90,7 @@ dustforceDiscord.on('message', (message) => {
           streamTitle = toWeirdCase(message.content, streamTitle);
         }
         if (typeof streams[stream]["login"] !== 'undefined') {
+          streamTitle = streamTitle.replace(/\\(\*|@|<|>|:|_|`|~|\\)/g, '$1').replace(/(\*|@|<|>|:|_|`|~|\\)/g, '\\$1');
           streamsString += '<' + streams[stream]["url"] + '> - ' + streamTitle + '\n';
         }
       }
@@ -263,3 +264,8 @@ function createReplayMessage (replay, type, previous) {
     console.error(err);
   });
 }
+dustforceDiscord.on('disconnect', () => {
+  setTimeout(() => {
+    dustforceDiscord.login(token);
+  }, 10000);
+});
