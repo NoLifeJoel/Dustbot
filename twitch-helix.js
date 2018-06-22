@@ -4,6 +4,9 @@ const streamEmitter = new EventEmitter();
 let startup = false;
 twitch.clientID = require('./../tokens')["twitch-client-id"];
 let streams = { };
+let gliStream = {
+  "timer": 0
+};
 function streamLoop () {
   twitch.streams.getStreams({
     "game_id": [
@@ -50,6 +53,36 @@ function streamLoop () {
       streams[stream["id"]]["login"] = stream["login"];
     }
     return;
+  }).then(() => {
+    return twitch.streams.getStreams({
+      "user_id": [
+        '32246447'
+      ]
+    });
+  }).then((data) => {
+    let res = data.response.data;
+    if (res.length === 1) {
+      gliStream.title = res[0].title;
+      return res[0];
+    }
+    return null;
+  }).then((res) => {
+    if (res === null) return null;
+    return twitch.games.getGames({
+      "id": [
+        res.game_id
+      ]
+    });
+  }).then((data) => {
+    if (data === null) return null;
+    let res = data.response.data[0];
+    res.box_art_url = res.box_art_url.replace('{width}', '80').replace('{height}', '107');
+    gliStream.game = res.name;
+    gliStream.game_box_art = res.box_art_url;
+    if (gliStream.timer === 0) {
+      streamEmitter.emit('gliStream', gliStream);
+    }
+    gliStream.timer = 12;
   }).catch((e) => {
     console.error(e);
   }).then(() => {
@@ -73,6 +106,9 @@ setInterval(() => {
       }
       delete streams[stream];
     }
+  }
+  if (gliStream.timer > 0) {
+    gliStream.timer--;
   }
 }, 20000);
 streamEmitter.getStreams = () => {

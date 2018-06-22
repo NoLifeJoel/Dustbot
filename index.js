@@ -43,6 +43,7 @@ class DiscordChannel {
 }
 const dustforceGeneralChannel = new DiscordChannel('276106941875355658', 'general');
 const dustforceLeaderboardsChannel = new DiscordChannel('204159286966747136', 'leaderboard-updates');
+const gliStreamChannel = new DiscordChannel('406841153909030932', 'gaming-streams');
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);
@@ -53,6 +54,27 @@ twitch.on('dustforceStream', (stream) => {
     console.error(e);
   });
   wsAPI.pushEvent('streamAdded', stream);
+});
+twitch.on('gliStream', (stream) => {
+  let streamMessage = {
+    "embed": {
+      //"color": 11000000,
+      "author": {
+        "name": 'Glideus',
+        "url": 'https://twitch.tv/glideus',
+        "icon_url": 'https://i.imgur.com/5CsG4op.jpg'
+      },
+      "thumbnail": {
+        "url": stream.game_box_art
+      },
+      "description": 'Title: ' + stream.title + '\nGame: ' + stream.game
+    }
+  };
+  gliStreamChannel.send(streamMessage).then((message) => {
+    //
+  }).catch((err) => {
+    console.error(err);
+  });;
 });
 twitch.on('dustforceStreamDeleted', (stream) => {
   wsAPI.pushEvent('dustforceStreamDeleted', stream);
