@@ -21,7 +21,7 @@ const twitch = require('./twitch-helix');
 const replays = require('./replays');
 const replayTools = require('./replayTools');
 wsAPI.getStreams = twitch.getStreams;
-class DustforceDiscordChannel {
+class DiscordChannel {
   constructor (id, name) {
     this.id = id;
     this.name = name;
@@ -41,8 +41,8 @@ class DustforceDiscordChannel {
     });
   }
 }
-const dustforceGeneralChannel = new DustforceDiscordChannel('276106941875355658', 'general');
-const dustforceLeaderboardsChannel = new DustforceDiscordChannel('204159286966747136', 'leaderboard-updates');
+const dustforceGeneralChannel = new DiscordChannel('276106941875355658', 'general');
+const dustforceLeaderboardsChannel = new DiscordChannel('204159286966747136', 'leaderboard-updates');
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);

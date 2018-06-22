@@ -5,6 +5,7 @@ const querystring = require('querystring');
 const EventEmitter = require('events');
 const replayEmitter = new EventEmitter();
 let last_replay;
+let nullAttempts = 0;
 setTimeout(() => {
   fs.readFile('last_replay', 'utf8').then((data) => {
     data = JSON.parse(data);
@@ -30,8 +31,9 @@ function getReplay (replay_id, loop=false) {
     if (typeof data.error !== 'undefined') {
       throw new Error(data.error);
     }
-    if (typeof data.finesse !== 'number' || data.finesse === 0) {
+    if (data.score === null) {
       throw new Error('Replay not finished parsing.');
+      nullAttempts++;
     }
     return request({
       "host": 'df.hitboxteam.com',
@@ -158,6 +160,11 @@ function getReplay (replay_id, loop=false) {
     return new Promise((resolve, reject) => {
       if (error.message !== 'Replay not found.' && error.message !== 'Replay not finished parsing.') {
         console.error(error);
+      }
+      if (nullAttempts > 4) {
+        nullAttempts = 0;
+        resolve(true);
+        return;
       }
       setTimeout(() => {
         resolve(false);
