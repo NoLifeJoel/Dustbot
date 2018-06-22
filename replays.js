@@ -161,14 +161,14 @@ function getReplay (replay_id, loop=false) {
       if (error.message !== 'Replay not found.' && error.message !== 'Replay not finished parsing.') {
         console.error(error);
       }
-      if (nullAttempts > 4) {
+      if (nullAttempts > 2) {
         nullAttempts = 0;
         resolve(true);
-        return;
+      } else {
+        setTimeout(() => {
+          resolve(false);
+        }, 30000);
       }
-      setTimeout(() => {
-        resolve(false);
-      }, 30000);
     });
   }).then((finished) => {
     if (finished) {
