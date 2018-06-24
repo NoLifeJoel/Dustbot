@@ -35,6 +35,7 @@ function getReplay (replay_id, loop=false) {
       nullAttempts++;
       throw new Error('Replay not finished parsing.');
     }
+    nullAttempts = 0;
     return request({
       "host": 'df.hitboxteam.com',
       "path": '/backend6/get_ties.php?' + querystring.stringify({
