@@ -32,8 +32,8 @@ function getReplay (replay_id, loop=false) {
       throw new Error(data.error);
     }
     if (data.score === null) {
-      throw new Error('Replay not finished parsing.');
       nullAttempts++;
+      throw new Error('Replay not finished parsing.');
     }
     return request({
       "host": 'df.hitboxteam.com',
