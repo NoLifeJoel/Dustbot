@@ -164,7 +164,9 @@ function getReplay (replay_id, loop=false) {
       }
       if (nullAttempts > 2) {
         nullAttempts = 0;
-        resolve(true);
+        setTimeout(() => {
+          resolve(true);
+        }, 30000);
       } else {
         setTimeout(() => {
           resolve(false);
