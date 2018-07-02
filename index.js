@@ -19,7 +19,12 @@ const token = require('./../tokens')["dustforce-discord"];
 const wsAPI = require('./websocket-api');
 const twitch = require('./twitch-helix');
 const replays = require('./replays');
+/*const EventEmitter = require('events');
+const replays = new EventEmitter();
+const twitch = new EventEmitter();*/
 const replayTools = require('./replayTools');
+const request = require('./request');
+const querystring = require('querystring');
 wsAPI.getStreams = twitch.getStreams;
 class DiscordChannel {
   constructor (id, name) {
@@ -74,7 +79,7 @@ twitch.on('gliStream', (stream) => {
     //
   }).catch((err) => {
     console.error(err);
-  });;
+  });
 });
 twitch.on('dustforceStreamDeleted', (stream) => {
   wsAPI.pushEvent('dustforceStreamDeleted', stream);
@@ -93,34 +98,85 @@ function toWeirdCase (pattern, str) {
 dustforceDiscord.on('message', (message) => {
   let streamCommandRegex = /^(\.|!)streams$/i;
   let streamNotCased = /^(\.|!)streams$/;
-  if (message.channel.id === dustforceGeneralChannel.id && streamCommandRegex.test(message.content)) {
-    let applyWeirdCase = !streamNotCased.test(message.content);
-    let streams = twitch.getStreams();
-    let nobodyStreaming = 'Nobody is streaming.';
-    let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
-    if (applyWeirdCase) {
-      nobodyStreaming = toWeirdCase(message.content, nobodyStreaming);
-      unknownStreaming = toWeirdCase(message.content, unknownStreaming);
-    }
-    if (Object.keys(streams).length === 0) {
-      message.channel.send(nobodyStreaming);
-    } else {
-      let streamsString = '';
-      for (let stream of Object.keys(streams)) {
-        let streamTitle = streams[stream]["title"];
-        if (applyWeirdCase) {
-          streamTitle = toWeirdCase(message.content, streamTitle);
+  if (message.channel.id === dustforceGeneralChannel.id) {
+    if (streamCommandRegex.test(message.content)) {
+      let applyWeirdCase = !streamNotCased.test(message.content);
+      let streams = twitch.getStreams();
+      let nobodyStreaming = 'Nobody is streaming.';
+      let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
+      if (applyWeirdCase) {
+        nobodyStreaming = toWeirdCase(message.content, nobodyStreaming);
+        unknownStreaming = toWeirdCase(message.content, unknownStreaming);
+      }
+      if (Object.keys(streams).length === 0) {
+        message.channel.send(nobodyStreaming);
+      } else {
+        let streamsString = '';
+        for (let stream of Object.keys(streams)) {
+          let streamTitle = streams[stream]["title"];
+          if (applyWeirdCase) {
+            streamTitle = toWeirdCase(message.content, streamTitle);
+          }
+          if (typeof streams[stream]["login"] !== 'undefined') {
+            streamTitle = streamTitle.replace(/\\(\*|@|<|>|:|_|`|~|\\)/g, '$1').replace(/(\*|@|<|>|:|_|`|~|\\)/g, '\\$1');
+            streamsString += '<' + streams[stream]["url"] + '> - ' + streamTitle + '\n';
+          }
         }
-        if (typeof streams[stream]["login"] !== 'undefined') {
-          streamTitle = streamTitle.replace(/\\(\*|@|<|>|:|_|`|~|\\)/g, '$1').replace(/(\*|@|<|>|:|_|`|~|\\)/g, '\\$1');
-          streamsString += '<' + streams[stream]["url"] + '> - ' + streamTitle + '\n';
+        if (streamsString === '') {
+          message.channel.send(unknownStreaming);
+        } else {
+          streamsString = streamsString.slice(0, -1);
+          message.channel.send(streamsString);
         }
       }
-      if (streamsString === '') {
-        message.channel.send(unknownStreaming);
-      } else {
-        streamsString = streamsString.slice(0, -1);
-        message.channel.send(streamsString);
+    }
+    if (message.content.indexOf('dustkid.com/replay/') !== -1) {
+      let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(' ')[0]);
+      if (typeof replay_id === 'number') {
+        request({
+          "host": 'dustkid.com',
+          "path": '/replayviewer.php?' + querystring.stringify({
+            "replay_id": replay_id,
+            "json": true,
+            "metaonly": true
+          })
+        }).then((response) => {
+          let replay = JSON.parse(response.data);
+          let version = '';
+          if (!Array.isArray(replay.tag) && typeof replay.tag.version === 'string') {
+            version = '\nDustmod version: ' + replay.tag.version;
+          }
+          const usernameWrapper = '**[' + replay.username + '](http://dustkid.com/profile/' + replay.user_id + '/)**';
+          const camera = '[<:camera:401772771908255755>](http://dustkid.com/replay/' + replay.replay_id + ')';
+          let tas = '';
+          if (replay.validated === -5) {
+            tas = ' - [TAS]'
+          }
+          let replayMessage = {
+            "embed": {
+              "author": {
+                "name": replay.levelname,
+                "url": 'http://dustkid.com/level/' + replay.level,
+                "icon_url": 'https://cdn.discordapp.com/emojis/' + replayTools.characterIcons(replay.character) + '.png'
+              },
+              "description": camera + ' ' + usernameWrapper + tas + '\n' +
+                'Score: ' + replayTools.scoreToIcon(replay.score_completion) + replayTools.scoreToIcon(replay.score_finesse) + '\n' +
+                'Time: ' + replayTools.parseTime(replay.time) + '\n' +
+                '<:apple:230164613424087041> ' + replay.apples + version,
+              "footer": {
+                "text": 'Date'
+              },
+              "timestamp": new Date(Number(replay.timestamp) * 1000)
+            }
+          };
+          message.channel.send(replayMessage).then((message) => {
+            //
+          }).catch((e) => {
+            //
+          });
+        }).catch((e) => {
+          //
+        });
       }
     }
   }

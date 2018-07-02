@@ -12,7 +12,7 @@ module.exports = {
   },
   "scoreToLetter": (score) => {
     score = Number(score);
-    switch (letter) {
+    switch (score) {
       case 5: return 'S';
       case 4: return 'A';
       case 3: return 'B';
@@ -93,6 +93,16 @@ module.exports = {
       return minutes.toString() + ':' + seconds + '.' + milliseconds;
     }
     return seconds.toString() + '.' + milliseconds;
+  },
+  "characterIcons": (character) => {
+    character = Number(character);
+    switch (character) {
+      case 0: return '401402235004911616'; break;
+      case 1: return '401402216272887808'; break;
+      case 2: return '401402223357329418'; break;
+      case 3: return '401402248040546315'; break;
+      default: throw new Error();
+    }
   },
   "level_thumbnails": {
     "abandoned": 'eWp3RMY',
