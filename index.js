@@ -131,8 +131,8 @@ dustforceDiscord.on('message', (message) => {
       }
     }
     if (message.content.indexOf('dustkid.com/replay/') !== -1) {
-      let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(' ')[0]);
-      if (typeof replay_id === 'number') {
+      let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(' ')[0].replace(/[^0-9\-]/g, ''));
+      if (typeof replay_id === 'number' && !isNaN(replay_id)) {
         request({
           "host": 'dustkid.com',
           "path": '/replayviewer.php?' + querystring.stringify({
