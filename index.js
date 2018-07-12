@@ -146,7 +146,7 @@ dustforceDiscord.on('message', (message) => {
           if (!Array.isArray(replay.tag) && typeof replay.tag.version === 'string') {
             version = '\nDustmod version: ' + replay.tag.version;
           }
-          const usernameWrapper = '**[' + replay.username + '](http://dustkid.com/profile/' + replay.user_id + '/)**';
+          const usernameWrapper = '**[' + replay.username + '](http://dustkid.com/profile/' + replay.user + '/)**';
           const camera = '[<:camera:401772771908255755>](http://dustkid.com/replay/' + replay.replay_id + ')';
           let tas = '';
           if (replay.validated === -5) {
