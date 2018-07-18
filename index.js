@@ -133,6 +133,7 @@ dustforceDiscord.on('message', (message) => {
     if (message.content.indexOf('dustkid.com/replay/') !== -1) {
       let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(' ')[0].replace(/[^0-9\-]/g, ''));
       if (typeof replay_id === 'number' && !isNaN(replay_id)) {
+        let responseCounter = 0;
         request({
           "host": 'dustkid.com',
           "path": '/replayviewer.php?' + querystring.stringify({
@@ -141,6 +142,11 @@ dustforceDiscord.on('message', (message) => {
             "metaonly": true
           })
         }).then((response) => {
+          if (responseCounter > 0) {
+            console.log('Multiple response counter: ' + responseCounter);
+            return;
+          }
+          responseCounter++;
           let replay = JSON.parse(response.data);
           let version = '';
           if (!Array.isArray(replay.tag) && typeof replay.tag.version === 'string') {
@@ -169,13 +175,17 @@ dustforceDiscord.on('message', (message) => {
               "timestamp": new Date(Number(replay.timestamp) * 1000)
             }
           };
+          let messageSendCounter = 0;
           message.channel.send(replayMessage).then((message) => {
-            //
+            if (messageSendCounter > 0) {
+              console.log('messageSendCounter: ' + messageSendCounter);
+              messageSendCounter++;
+            }
           }).catch((e) => {
-            //
+            console.error(e);
           });
         }).catch((e) => {
-          //
+          console.error(e);
         });
       }
     }
@@ -278,23 +288,29 @@ replays.on('replay', (replay) => {
   wsAPI.pushEvent('dustforceReplay', replay);
   replay.character = Number(replay.character);
   if (typeof replayTools["level_thumbnails"][replay.level_name] !== 'undefined') {
-    if (replay.score_rank_pb && replay.score_tied_with < 11) {
+    if ((replay.level_name === 'yottadifficult' || replay.level_name === 'exec func ruin user') && (typeof replay["previous_score_pb"] === 'undefined' || Number(replay["previous_score_pb"].score) !== 1285)) {
       let previous = '';
       if (typeof replay["previous_score_pb"] !== 'undefined') {
         previous = replay["previous_score_pb"];
       }
-      createReplayMessage(replay, "Score", previous);
+      createReplayMessage(replay, "Score", previous, true);
+    } else if (replay.score_rank_pb && replay.score_tied_with < 11) {
+      let previous = '';
+      if (typeof replay["previous_score_pb"] !== 'undefined') {
+        previous = replay["previous_score_pb"];
+      }
+      createReplayMessage(replay, "Score", previous, false);
     }
     if (replay.time_rank_pb && replay.time_tied_with < 11) {
       let previous = '';
       if (typeof replay["previous_time_pb"] !== 'undefined') {
         previous = replay["previous_time_pb"];
       }
-      createReplayMessage(replay, "Time", previous);
+      createReplayMessage(replay, "Time", previous, false);
     }
   }
 });
-function createReplayMessage (replay, type, previous) {
+function createReplayMessage (replay, type, previous, firstSS) {
   const lowercaseType = type.toLowerCase();
   const colors = [ 8493779, 12147535, 11829461, 9874791 ];
   const characterIcons = [ '401402235004911616', '401402216272887808', '401402223357329418', '401402248040546315' ];
@@ -315,6 +331,9 @@ function createReplayMessage (replay, type, previous) {
     //if (previous["time"] !== replay["time"]) {
       previousTime = ' _' + replayTools.parseTime(previous["time"]) + '_  ->';
     //}
+  }
+  if (firstSS) {
+    type = 'First SS';
   }
   let replayMessage = {
     "embed": {
