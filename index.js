@@ -148,15 +148,32 @@ dustforceDiscord.on('message', (message) => {
           }
           responseCounter++;
           let replay = JSON.parse(response.data);
-          let version = '';
-          if (!Array.isArray(replay.tag) && typeof replay.tag.version === 'string') {
-            version = '\nDustmod version: ' + replay.tag.version;
+          let tags = '';
+          if (!Array.isArray(replay.tag)) {
+            if (typeof replay.tag.version === 'string') {
+              //tags = '\nDustmod version: ' + replay.tag.version;
+            }
+            if (typeof replay.tag.mode === 'string' && replay.tag.mode !== '') {
+              tags = '\nMode: ' + replay.tag.mode;
+            }
           }
           const usernameWrapper = '**[' + replay.username + '](http://dustkid.com/profile/' + replay.user + '/)**';
           const camera = '[<:camera:401772771908255755>](http://dustkid.com/replay/' + replay.replay_id + ')';
           let tas = '';
+          let ranks = '';
           if (replay.validated === -5) {
             tas = ' - [TAS]'
+          } else if (replay.rank_all_time !== false && replay.rank_all_score !== false) {
+            let time_ties = '';
+            let score_ties = '';
+            if (replay.rank_all_score_ties > 0) {
+              score_ties = ' (' + (replay.rank_all_score_ties + 1) + '-way tie)';
+            }
+            if (replay.rank_all_time_ties > 0) {
+              time_ties = ' (' + (replay.rank_all_time_ties + 1) + '-way tie)';
+            }
+            ranks = 'Score Rank: ' + replayTools.rankToStr(replay.rank_all_score + 1) + score_ties + '\n' +
+                    'Time Rank: '  + replayTools.rankToStr(replay.rank_all_time + 1)  + time_ties + '\n';
           }
           let replayMessage = {
             "embed": {
@@ -167,8 +184,8 @@ dustforceDiscord.on('message', (message) => {
               },
               "description": camera + ' ' + usernameWrapper + tas + '\n' +
                 'Score: ' + replayTools.scoreToIcon(replay.score_completion) + replayTools.scoreToIcon(replay.score_finesse) + '\n' +
-                'Time: ' + replayTools.parseTime(replay.time) + '\n' +
-                '<:apple:230164613424087041> ' + replay.apples + version,
+                'Time: ' + replayTools.parseTime(replay.time) + '\n' + ranks +
+                '<:apple:230164613424087041> ' + replay.apples + tags,
               "footer": {
                 "text": 'Date'
               },
@@ -288,7 +305,7 @@ replays.on('replay', (replay) => {
   wsAPI.pushEvent('dustforceReplay', replay);
   replay.character = Number(replay.character);
   if (typeof replayTools["level_thumbnails"][replay.level_name] !== 'undefined') {
-    if ((replay.level_name === 'yottadifficult' || replay.level_name === 'exec func ruin user') && (typeof replay["previous_score_pb"] === 'undefined' || Number(replay["previous_score_pb"].score) !== 1285)) {
+    if ((replay.level_name === 'yottadifficult' || replay.level_name === 'exec func ruin user') && (typeof replay["previous_score_pb"] === 'undefined' || Number(replay["previous_score_pb"].score) !== 1285) && Number(replay.score) === 1285) {
       let previous = '';
       if (typeof replay["previous_score_pb"] !== 'undefined') {
         previous = replay["previous_score_pb"];
