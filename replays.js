@@ -193,9 +193,9 @@ function find_previous (replay, pb_replays) {
   return null;
 }
 function compareReplays (replay1, replay2) {
-  replay1["score"] = replay1["finesse"] + replay1["completion"];
-  replay2["score"] = replay2["finesse"] + replay2["completion"];
-  if (replay1["score"] === replay2["score"] && replay1["time"] === replay2["time"]) {
+  let replayOneScore = replay1["finesse"] + replay1["completion"];
+  let replayTwoScore = replay2["finesse"] + replay2["completion"];
+  if (replayOneScore === replayTwoScore && replay1["time"] === replay2["time"]) {
     return true;
   }
   return false;
