@@ -94,13 +94,19 @@ function getReplay (replay_id, loop=false) {
     });
     if (replay["score_rank_pb"]) {
       replay["previous_score_pb"] = find_previous(replay, score_pbs);
+      if (replay["previous_score_pb"] === null) {
+        delete replay["previous_score_pb"];
+      }
     }
     if (replay["time_rank_pb"]) {
       replay["previous_time_pb"] = find_previous(replay, time_pbs);
+      if (replay["previous_time_pb"] === null) {
+        delete replay["previous_time_pb"];
+      }
     }
     return new Promise ((resolve, reject) => {
       let resolved = [ false, false ];
-      if (typeof replay["previous_time_pb"] !== 'undefined' && replay["previous_time_pb"] !== null) {
+      if (typeof replay["previous_time_pb"] !== 'undefined') {
         request({
           "host": 'df.hitboxteam.com',
           "path": '/backend6/get_replay_meta.php?' + querystring.stringify({
@@ -124,7 +130,7 @@ function getReplay (replay_id, loop=false) {
           resolved[0] = true;
         }
       }
-      if (typeof replay["previous_score_pb"] !== 'undefined' && replay["previous_score_pb"] !== null) {
+      if (typeof replay["previous_score_pb"] !== 'undefined') {
         request({
           "host": 'df.hitboxteam.com',
           "path": '/backend6/get_replay_meta.php?' + querystring.stringify({
