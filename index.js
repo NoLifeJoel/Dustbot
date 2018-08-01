@@ -328,6 +328,7 @@ replays.on('replay', (replay) => {
   }
 });
 function createReplayMessage (replay, type, previous, firstSS) {
+  if (Number(replay.user_id) === 0 || Number(replay.user_id) === 1 || Number(replay.user_id) === 19998) return; // [not logged in], Anonymous, guest
   const lowercaseType = type.toLowerCase();
   const colors = [ 8493779, 12147535, 11829461, 9874791 ];
   const characterIcons = [ '401402235004911616', '401402216272887808', '401402223357329418', '401402248040546315' ];
@@ -342,12 +343,8 @@ function createReplayMessage (replay, type, previous, firstSS) {
   let previousTime = '';
   let previousRank = '';
   if (typeof previous === 'object') {
-    //if (previous[lowercaseType + "_rank"] !== replay[lowercaseType + "_rank"]) {
-      previousRank = ' _' + replayTools.rankToStr(previous[lowercaseType + "_rank"]) + '_  ->';
-    //}
-    //if (previous["time"] !== replay["time"]) {
-      previousTime = ' _' + replayTools.parseTime(previous["time"]) + '_  ->';
-    //}
+    previousRank = ' _' + replayTools.rankToStr(previous[lowercaseType + "_rank"]) + '_  ->';
+    previousTime = ' _' + replayTools.parseTime(previous["time"]) + '_  ->';
   }
   if (firstSS) {
     type = 'First SS';
