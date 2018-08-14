@@ -4,11 +4,9 @@
       module.exports = {
         "twitch-client-id": 'client-id', // Client ID from the twitch website in the developers section.
         "discord": 'token', // Client token from the discord website in the developers section.
-        "api-client": 'token' // Set this to something random for incoming websocket connections that should be allowed to send messages through your discord bot.
       }
     Dependencies from npm:
       discord.js,
-      ws,
       twitch-helix-api
     Highly recommended:
       Proxy the websocket server with SSL (nginx works well for me), or at the very least google the ws library and figure out how to implement SSL.
@@ -16,7 +14,6 @@
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
 const token = require('./../tokens')["dustforce-discord"];
-const wsAPI = require('./websocket-api');
 const twitch = require('./twitch-helix');
 const replays = require('./replays');
 /*const EventEmitter = require('events');
@@ -25,7 +22,6 @@ const twitch = new EventEmitter();*/
 const replayTools = require('./replayTools');
 const request = require('./request');
 const querystring = require('querystring');
-wsAPI.getStreams = twitch.getStreams;
 class DiscordChannel {
   constructor (id, name) {
     this.id = id;
@@ -58,7 +54,6 @@ twitch.on('dustforceStream', (stream) => {
   }).catch((e) => {
     console.error(e);
   });
-  wsAPI.pushEvent('streamAdded', stream);
 });
 twitch.on('gliStream', (stream) => {
   let streamMessage = {
@@ -80,9 +75,6 @@ twitch.on('gliStream', (stream) => {
   }).catch((err) => {
     console.error(err);
   });
-});
-twitch.on('dustforceStreamDeleted', (stream) => {
-  wsAPI.pushEvent('dustforceStreamDeleted', stream);
 });
 dustforceDiscord.on('ready', () => {
   dustforceDiscord.user.setPresence({
@@ -207,102 +199,15 @@ dustforceDiscord.on('message', (message) => {
       }
     }
   }
-  wsAPI.pushEvent('dustforceDiscordMessageAdd', {
-    "channel": {
-      "id": message.channel.id,
-      "name": message.channel.name,
-      "type": message.channel.type
-    },
-    "message": {
-      "id": message.id,
-      "content": message.content,
-      "createdTimestamp": message.createdTimestamp,
-      "system": message.system,
-      "author": {
-        "id": message.author.id,
-        "username": message.author.username,
-        "discriminator": message.author.discriminator,
-        "bot": message.author.bot
-      }
-    }
-  });
 });
 dustforceDiscord.on('messageDelete', (message) => {
-  wsAPI.pushEvent('dustforceDiscordMessageDelete', {
-    "channel": {
-      "id": message.channel.id,
-      "name": message.channel.name,
-      "type": message.channel.type
-    },
-    "message": {
-      "id": message.id,
-      "content": message.content,
-      "createdTimestamp": message.createdTimestamp,
-      "system": message.system,
-      "author": {
-        "id": message.author.id,
-        "username": message.author.username,
-        "discriminator": message.author.discriminator,
-        "bot": message.author.bot
-      }
-    }
-  });
+  //
 });
 dustforceDiscord.on('messageReactionAdd', (reaction, user) => {
-  if (reaction.message.channel.type === 'text') {
-    wsAPI.pushEvent('dustforceDiscordReactionAdd', {
-      "message": {
-        "id": reaction.message.id,
-        "content": reaction.message.content,
-        "createdTimestamp": reaction.message.createdTimestamp,
-        "system": reaction.message.system,
-        "author": {
-          "id": reaction.message.author.id,
-          "discriminator": reaction.message.author.discriminator,
-          "username": reaction.message.author.username,
-          "bot": reaction.message.author.bot
-        }
-      },
-      "emoji": {
-        "name": reaction._emoji.name,
-        "id": reaction._emoji.id
-      },
-      "channel": {
-        "name": reaction.message.channel.name,
-        "id": reaction.message.channel.id,
-        "type": reaction.message.channel.type
-      }
-    });
-    wsAPI.pushEvent('dustforceDiscordReactionRemove', {
-      "message": {
-        "id": reaction.message.id,
-        "content": reaction.message.content,
-        "createdTimestamp": reaction.message.createdTimestamp,
-        "system": reaction.message.system,
-        "author": {
-          "id": reaction.message.author.id,
-          "discriminator": reaction.message.author.discriminator,
-          "username": reaction.message.author.username,
-          "bot": reaction.message.author.bot
-        }
-      },
-      "emoji": {
-        "name": reaction._emoji.name,
-        "id": reaction._emoji.id
-      },
-      "channel": {
-        "name": reaction.message.channel.name,
-        "id": reaction.message.channel.id
-      }
-    });
-  }
+  //
 });
-wsAPI.dustforceDiscord.generalSend = (msg) => {
-  return dustforceGeneralChannel.send(msg);
-}
 replays.on('replay', (replay) => {
   console.log(replay.replay_id);
-  wsAPI.pushEvent('dustforceReplay', replay);
   replay.character = Number(replay.character);
   if (typeof replayTools["level_thumbnails"][replay.level_name] !== 'undefined') {
     if ((replay.level_name === 'yottadifficult' || replay.level_name === 'exec func ruin user') && (typeof replay["previous_score_pb"] === 'undefined' || Number(replay["previous_score_pb"].score) !== 1285) && Number(replay.score) === 1285) {

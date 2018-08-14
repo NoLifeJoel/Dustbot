@@ -97,13 +97,6 @@ setInterval(() => {
   for (let stream of Object.keys(streams)) {
     streams[stream]["timer"]--;
     if (streams[stream]["timer"] < 1) {
-      if (typeof streams[stream]["url"] !== 'undefined' && typeof streams[stream]["title"] !== 'undefined') {
-        streamEmitter.emit('dustforceStreamDeleted', {
-          "url": streams[stream]["url"],
-          "title": streams[stream]["title"],
-          "id": stream
-        });
-      }
       delete streams[stream];
     }
   }
