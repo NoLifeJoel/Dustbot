@@ -59,6 +59,16 @@ module.exports = {
       break;
     }
   },
+  "characterToString": (character) => {
+    character = Number(character);
+    switch (character) {
+      case 0: return 'Dustman';
+      case 1: return 'Dustgirl';
+      case 2: return 'Dustkid';
+      case 3: return 'Dustworth';
+      default: return '?';
+    }
+  },
   "parseTime": (time) => {
     time = Number(time);
     if (time < 0) {

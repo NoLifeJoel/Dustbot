@@ -4,16 +4,24 @@
       module.exports = {
         "twitch-client-id": 'client-id', // Client ID from the twitch website in the developers section.
         "discord": 'token', // Client token from the discord website in the developers section.
+        "twitter": {
+          "consumer_key": 'key',
+          "consumer_secret": 'secret',
+          "access_token": 'token',
+          "access_token_secret": 'secret'
+        }
       }
     Dependencies from npm:
       discord.js,
       twitch-helix-api
+      twit
     Highly recommended:
       Proxy the websocket server with SSL (nginx works well for me), or at the very least google the ws library and figure out how to implement SSL.
 */
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
 const token = require('./../tokens')["dustforce-discord"];
+const twitter_credentials = require('./../tokens')["twitter"];
 const twitch = require('./twitch-helix');
 const replays = require('./replays');
 /*const EventEmitter = require('events');
@@ -22,6 +30,8 @@ const twitch = new EventEmitter();*/
 const replayTools = require('./replayTools');
 const request = require('./request');
 const querystring = require('querystring');
+const Twit = require('twit');
+const twitter = new Twit(twitter_credentials);
 class DiscordChannel {
   constructor (id, name) {
     this.id = id;
@@ -250,6 +260,70 @@ function createReplayMessage (replay, type, previous, firstSS) {
   if (typeof previous === 'object') {
     previousRank = ' _' + replayTools.rankToStr(previous[lowercaseType + "_rank"]) + '_  ->';
     previousTime = ' _' + replayTools.parseTime(previous["time"]) + '_  ->';
+  }
+  if (x_way_tie === '' && Number(replay[lowercaseType + "_tied_with"]) === 1) {
+    request({
+      "host": 'df.hitboxteam.com',
+      "path": '/backend6/scores.php?' + querystring.stringify({
+        "level": replay.level_name,
+        "max": 1,
+        "offset": 1
+      })
+    }).then((response) => {
+      let second_place = JSON.parse(response.data)["best_" + lowercaseType + "s"][0];
+      let previous_second = second_place;
+      second_place.finesse = replayTools.letterToScore(second_place.score_finesse);
+      second_place.completion = replayTools.letterToScore(second_place.score_thoroughness);
+      let second_place_score = second_place.finesse + second_place.completion;
+      let previous_score = previous.finesse + previous.completion;
+      if (typeof previous === 'object') {
+        if (lowercaseType === 'time') {
+          if ((Number(previous["time"]) < Number(second_place["time"])) ||
+            (Number(previous["time"]) === Number(second_place["time"]) && previous_score < second_place_score) ||
+            (Number(previous["time"]) === Number(second_place["time"]) && previous_score === second_place_score && Number(previous["timestamp"]) < Number(second_place["timestamp"]))
+          ) {
+            previous_second = previous;
+          }
+        }
+        if (lowercaseType === 'score') {
+          if (previous_score < second_place_score || 
+            (previous_score === second_place_score && Number(previous["time"]) < Number(previous_second["time"])) || 
+            (previous_score === second_place_score && Number(previous["time"]) === Number(previous_second["time"]) && Number(previous["timestamp"]) < Number(second_place["timestamp"]))
+          ) {
+            previous_second = previous;
+          }
+        }
+      }
+      let improvedBy = Number(previous_second["time"]) - Number(replay["time"]);
+      let message = '';
+      let date = new Date(Number(replay.timestamp) * 1000);
+      date = date.toDateString();
+      if (Number(previous_second["user_id"]) === Number(replay["user_id"])) {
+        if (Number(replay["time"]) < Number(previous_second["time"])) {
+          message = replay.username + ' improved ' + replay.level_clean_name + ' (' + type + ') by ' + replayTools.parseTime(improvedBy) +
+            ' seconds with a time of ' + replayTools.parseTime(replay.time) + ', score ' + replayTools.scoreToLetter(replay.completion) + replayTools.scoreToLetter(replay.finesse) +
+            ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
+        } else {
+          message = replay.username + ' improved ' + replay.level_clean_name + ' (' + type + ') by getting a higher score with a time of ' + replayTools.parseTime(replay.time) +
+            ', score ' + replayTools.scoreToLetter(replay.completion) + replayTools.scoreToLetter(replay.finesse) + ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
+        }
+      } else {
+        if (Number(replay["time"]) < Number(previous_second["time"])) {
+          message = replay.username + ' beat ' + previous_second.name + ' on ' + replay.level_clean_name + ' (' + type + ') by ' + replayTools.parseTime(improvedBy) + ' seconds with a time of ' +
+            replayTools.parseTime(replay.time) + ', score ' + replayTools.scoreToLetter(replay.completion) + replayTools.scoreToLetter(replay.finesse) + ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
+        } else {
+          message = replay.username + ' beat ' + previous_second.name + ' on ' + replay.level_clean_name + ' (' + type + ') by getting a higher score with a time of ' + replayTools.parseTime(replay.time) + ', score ' + 
+            replayTools.scoreToLetter(replay.completion) + replayTools.scoreToLetter(replay.finesse) + ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
+        }
+      }
+      twitter.post('statuses/update', { "status": message }, (err, data, response) => {
+        if (err) {
+          console.log(err);
+        }
+      });
+    }).catch((err) => {
+      console.error(err);
+    });
   }
   if (firstSS) {
     type = 'First SS';
