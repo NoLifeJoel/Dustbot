@@ -318,7 +318,7 @@ function createReplayMessage (replay, type, previous, firstSS) {
       }
       twitter.post('statuses/update', { "status": message }, (err, data, response) => {
         if (err) {
-          console.log(err);
+          console.error(err);
         }
       });
     }).catch((err) => {
