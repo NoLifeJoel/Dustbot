@@ -226,7 +226,8 @@ replays.on('replay', (replay) => {
         previous = replay["previous_score_pb"];
       }
       createReplayMessage(replay, "Score", previous, true);
-    } else if (replay.score_rank_pb && replay.score_tied_with < 11) {
+    }
+    if (replay.score_rank_pb && replay.score_tied_with < 11) {
       let previous = '';
       if (typeof replay["previous_score_pb"] !== 'undefined') {
         previous = replay["previous_score_pb"];
