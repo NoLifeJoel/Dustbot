@@ -15,8 +15,6 @@
       discord.js,
       twitch-helix-api
       twit
-    Highly recommended:
-      Proxy the websocket server with SSL (nginx works well for me), or at the very least google the ws library and figure out how to implement SSL.
 */
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
@@ -52,14 +50,15 @@ class DiscordChannel {
     });
   }
 }
-const dustforceGeneralChannel = new DiscordChannel('276106941875355658', 'general');
+const dustforceMainChannel = new DiscordChannel('276106941875355658', 'dustforce');
 const dustforceLeaderboardsChannel = new DiscordChannel('204159286966747136', 'leaderboard-updates');
 const gliStreamChannel = new DiscordChannel('406841153909030932', 'gaming-streams');
+const dustforceHoldingChannel = new DiscordChannel('533384972283936788', 'holding')
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);
 twitch.on('dustforceStream', (stream) => {
-  dustforceGeneralChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
+  dustforceMainChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
     //console.log(message);
   }).catch((e) => {
     console.error(e);
@@ -97,10 +96,28 @@ dustforceDiscord.on('ready', () => {
 function toWeirdCase (pattern, str) {
   return str.split('').map((v, i) => pattern[i%7+1] === pattern[i%7+1].toLowerCase() ? v.toLowerCase() : v.toUpperCase()).join('');
 }
+let dustforceHoldingRole = null;
+dustforceDiscord.on('guildMemberAdd', (member) => {
+  if (member.guild.id === '83037671227658240') {
+    if (dustforceHoldingRole === null) {
+      dustforceHoldingRole = member.guild.roles.find((role) => role.name === 'holding');
+    }
+    member.addRole(dustforceHoldingRole);
+    dustforceHoldingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
+  }
+});
 dustforceDiscord.on('message', (message) => {
   let streamCommandRegex = /^(\.|!)streams$/i;
   let streamNotCased = /^(\.|!)streams$/;
-  if (message.channel.id === dustforceGeneralChannel.id) {
+  if (message.channel.id === dustforceHoldingChannel.id) {
+    if (dustforceHoldingRole === null) {
+      dustforceHoldingRole = message.member.guild.roles.find((role) => role.name === 'holding');
+    }
+    if (message.content === '!verify' && message.member.roles.has(dustforceHoldingRole.id)) {
+      message.member.removeRole(dustforceHoldingRole);
+    }
+  }
+  if (message.channel.id === dustforceMainChannel.id) {
     if (streamCommandRegex.test(message.content)) {
       let applyWeirdCase = !streamNotCased.test(message.content);
       let streams = twitch.getStreams();
