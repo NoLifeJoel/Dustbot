@@ -93,6 +93,18 @@ dustforceDiscord.on('ready', () => {
     }
   });
 });
+function uwu (str) {
+  str = str.replace(/r|l/gi, (match) => {
+    if (match === 'r' || match === 'l') return 'w';
+    if (match === 'R' || match === 'L') return 'W';
+  });
+  if (Math.round(Math.random())) {
+    str = str + ' owo';
+  } else {
+    str = str + ' uwu';
+  }
+  return str;
+}
 function toWeirdCase (pattern, str) {
   return str.split('').map((v, i) => pattern[i%7+1] === pattern[i%7+1].toLowerCase() ? v.toLowerCase() : v.toUpperCase()).join('');
 }
@@ -107,8 +119,8 @@ dustforceDiscord.on('guildMemberAdd', (member) => {
   }
 });
 dustforceDiscord.on('message', (message) => {
-  let streamCommandRegex = /^(\.|!)streams$/i;
-  let streamNotCased = /^(\.|!)streams$/;
+  let streamCommandRegex = /^(\.|!)(st(r|w)eams)$/i;
+  let streamNotCased = /^(\.|!)(st(r|w)eams)$/;
   if (message.channel.id === dustforceHoldingChannel.id) {
     if (dustforceHoldingRole === null) {
       dustforceHoldingRole = message.member.guild.roles.find((role) => role.name === 'holding');
@@ -128,11 +140,17 @@ dustforceDiscord.on('message', (message) => {
         unknownStreaming = toWeirdCase(message.content, unknownStreaming);
       }
       if (Object.keys(streams).length === 0) {
+        if (message.content.toLowerCase() === '.stweams') {
+          nobodyStreaming = uwu(nobodyStreaming);
+        }
         message.channel.send(nobodyStreaming);
       } else {
         let streamsString = '';
         for (let stream of Object.keys(streams)) {
           let streamTitle = streams[stream]["title"];
+          if (message.content.toLowerCase() === '.stweams') {
+            streamTitle = uwu(streamTitle);
+          }
           if (applyWeirdCase) {
             streamTitle = toWeirdCase(message.content, streamTitle);
           }
@@ -142,6 +160,9 @@ dustforceDiscord.on('message', (message) => {
           }
         }
         if (streamsString === '') {
+          if (message.content.toLowerCase() === '.stweams') {
+            unknownStreaming = uwu(unknownStreaming);
+          }
           message.channel.send(unknownStreaming);
         } else {
           streamsString = streamsString.slice(0, -1);
