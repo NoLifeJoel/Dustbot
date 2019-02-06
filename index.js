@@ -120,6 +120,7 @@ dustforceDiscord.on('guildMemberAdd', (member) => {
 });
 dustforceDiscord.on('message', (message) => {
   let streamCommandRegex = /^(\.|!)(st(r|w)eams)$/i;
+  let stweamCommandRegex = /^(\.|!)(stweams)$/i;
   let streamNotCased = /^(\.|!)(st(r|w)eams)$/;
   if (message.channel.id === dustforceHoldingChannel.id) {
     if (dustforceHoldingRole === null) {
@@ -136,7 +137,7 @@ dustforceDiscord.on('message', (message) => {
       let nobodyStreaming = 'Nobody is streaming.';
       let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
       if (Object.keys(streams).length === 0) {
-        if (message.content.toLowerCase() === '.stweams') {
+        if (stweamCommandRegex.test(message.content)) {
           nobodyStreaming = uwu(nobodyStreaming);
         }
         if (applyWeirdCase) {
@@ -147,7 +148,7 @@ dustforceDiscord.on('message', (message) => {
         let streamsString = '';
         for (let stream of Object.keys(streams)) {
           let streamTitle = streams[stream]["title"];
-          if (message.content.toLowerCase() === '.stweams') {
+          if (stweamCommandRegex.test(message.content)) {
             streamTitle = uwu(streamTitle);
           }
           if (applyWeirdCase) {
@@ -159,7 +160,7 @@ dustforceDiscord.on('message', (message) => {
           }
         }
         if (streamsString === '') {
-          if (message.content.toLowerCase() === '.stweams') {
+          if (stweamCommandRegex.test(message.content)) {
             unknownStreaming = uwu(unknownStreaming);
           }
           if (applyWeirdCase) {
