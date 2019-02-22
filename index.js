@@ -1,6 +1,6 @@
 /*
   Requirements for running this:
-    A file named tokens.js in the parent directory of this file with the following content:
+    A file named tokens.js in the same directory of this file with the following content:
       module.exports = {
         "twitch-client-id": 'client-id', // Client ID from the twitch website in the developers section.
         "discord": 'token', // Client token from the discord website in the developers section.
@@ -18,8 +18,8 @@
 */
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
-const token = require('./../tokens')["dustforce-discord"];
-const twitter_credentials = require('./../tokens')["twitter"];
+const token = require('./tokens')["dustforce-discord"];
+const twitter_credentials = require('./tokens')["twitter"];
 const twitch = require('./twitch-helix');
 const replays = require('./replays');
 /*const EventEmitter = require('events');
@@ -30,6 +30,7 @@ const request = require('./request');
 const querystring = require('querystring');
 const Twit = require('twit');
 const twitter = new Twit(twitter_credentials);
+const auto_verify = require('./auto_verify'); // Array of User ID's exempt from bot verification.
 class DiscordChannel {
   constructor (id, name) {
     this.id = id;
@@ -92,8 +93,10 @@ dustforceDiscord.on('guildMemberAdd', (member) => {
     if (dustforceHoldingRole === null) {
       dustforceHoldingRole = member.guild.roles.find((role) => role.name === 'holding');
     }
-    member.addRole(dustforceHoldingRole);
-    dustforceHoldingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
+    if (auto_verify.indexOf(member.id) === -1) { 
+      member.addRole(dustforceHoldingRole);
+      dustforceHoldingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
+    }
   }
 });
 dustforceDiscord.on('message', (message) => {

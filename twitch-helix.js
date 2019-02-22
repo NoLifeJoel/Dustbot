@@ -2,7 +2,7 @@ const twitch = require('twitch-helix-api');
 const EventEmitter = require('events');
 const streamEmitter = new EventEmitter();
 let startup = false;
-twitch.clientID = require('./../tokens')["twitch-client-id"];
+twitch.clientID = require('./tokens')["twitch-client-id"];
 let streams = { };
 let gliStream = {
   "timer": 0

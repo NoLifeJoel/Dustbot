@@ -58,3 +58,5 @@ typings/
 .env
 
 *.sh
+auto_verify.js
+tokens.js
