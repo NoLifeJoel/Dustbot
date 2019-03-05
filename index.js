@@ -154,7 +154,8 @@ dustforceDiscord.on('message', (message) => {
         }
       }
     }
-    if (message.content.indexOf('dustkid.com/replay/') !== -1) {
+    let noThumbnailRegex = /^(\.|!)(nt)$/i;
+    if (message.content.indexOf('dustkid.com/replay/') !== -1 && !noThumbnailRegex.test(message.content.split(' ')[0])) {
       let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(' ')[0].replace(/[^0-9\-]/g, ''));
       if (typeof replay_id === 'number' && !isNaN(replay_id)) {
         let responseCounter = 0;
