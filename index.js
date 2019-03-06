@@ -204,7 +204,7 @@ dustforceDiscord.on('message', (message) => {
             "embed": {
               "author": {
                 "name": replay.levelname,
-                "url": 'http://dustkid.com/level/' + replay.level,
+                "url": 'http://dustkid.com/level/' + encodeURIComponent(replay.level),
                 "icon_url": 'https://cdn.discordapp.com/emojis/' + replayTools.characterIcons(replay.character) + '.png'
               },
               "description": camera + ' ' + usernameWrapper + tas + '\n' +
@@ -357,7 +357,7 @@ function createReplayMessage (replay, type, previous, firstSS) {
       "color": colors[replay.character],
       "author": {
         "name": replay.level_clean_name + ' - ' + type,
-        "url": 'http://dustkid.com/level/' + replay.level_name,
+        "url": 'http://dustkid.com/level/' + encodeURIComponent(replay.level_name),
         "icon_url": "https://cdn.discordapp.com/emojis/" + characterIcons[replay.character] + ".png"
       },
       "thumbnail": {
