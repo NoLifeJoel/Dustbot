@@ -32,9 +32,8 @@ const Twit = require('twit');
 const twitter = new Twit(twitter_credentials);
 const auto_verify = require('./auto_verify'); // Array of User ID's exempt from bot verification.
 class DiscordChannel {
-  constructor (id, name) {
+  constructor (id) {
     this.id = id;
-    this.name = name;
   }
   send (msg) {
     return new Promise ((resolve, reject) => {
@@ -43,22 +42,25 @@ class DiscordChannel {
         if (typeof channel !== 'undefined') {
           resolve(channel.send(msg));
         } else {
-          reject('Discord connection open, but ' + this.name + ' channel wasn\'t found.');
+          reject('Discord connection open, but ' + this.id + ' channel wasn\'t found.');
         }
       } else {
-        reject('Discord connection not open. (Tried to send message to ' + this.name + ' channel)');
+        reject('Discord connection not open. (Tried to send message to ' + this.id + ' channel)');
       }
     });
   }
 }
-const dustforceMainChannel = new DiscordChannel('276106941875355658', 'dustforce');
-const dustforceLeaderboardsChannel = new DiscordChannel('204159286966747136', 'leaderboard-updates');
-const dustforceHoldingChannel = new DiscordChannel('533384972283936788', 'holding')
+const dustforceChannel = new DiscordChannel('276106941875355658');
+const leaderboardUpdatesChannel = new DiscordChannel('204159286966747136');
+const holdingChannel = new DiscordChannel('533384972283936788');
+const mapmakingChannel = new DiscordChannel('275015117236731905');
+const tasforceChannel = new DiscordChannel('202307017581395968');
+const racesChannel = new DiscordChannel('298677601881292800');
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);
 twitch.on('dustforceStream', (stream) => {
-  dustforceMainChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
+  dustforceChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
     //console.log(message);
   }).catch((e) => {
     console.error(e);
@@ -87,15 +89,15 @@ function uwu (str) {
 function toWeirdCase (pattern, str) {
   return str.split('').map((v, i) => pattern[i%7+1] === pattern[i%7+1].toLowerCase() ? v.toLowerCase() : v.toUpperCase()).join('');
 }
-let dustforceHoldingRole = null;
+let holdingRole = null;
 dustforceDiscord.on('guildMemberAdd', (member) => {
   if (member.guild.id === '83037671227658240') {
-    if (dustforceHoldingRole === null) {
-      dustforceHoldingRole = member.guild.roles.find((role) => role.name === 'holding');
+    if (holdingRole === null) {
+      holdingRole = member.guild.roles.find((role) => role.name === 'holding');
     }
     if (auto_verify.indexOf(member.id) === -1) { 
-      member.addRole(dustforceHoldingRole);
-      dustforceHoldingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
+      member.addRole(holdingRole);
+      holdingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
     }
   }
 });
@@ -103,15 +105,15 @@ dustforceDiscord.on('message', (message) => {
   let streamCommandRegex = /^(\.|!)(st(r|w)eams)$/i;
   let stweamCommandRegex = /^(\.|!)(stweams)$/i;
   let streamNotCased = /^(\.|!)(st(r|w)eams)$/;
-  if (message.channel.id === dustforceHoldingChannel.id) {
-    if (dustforceHoldingRole === null) {
-      dustforceHoldingRole = message.member.guild.roles.find((role) => role.name === 'holding');
+  if (message.channel.id === holdingChannel.id) {
+    if (holdingRole === null) {
+      holdingRole = message.member.guild.roles.find((role) => role.name === 'holding');
     }
-    if (message.content === '!verify' && message.member.roles.has(dustforceHoldingRole.id)) {
-      message.member.removeRole(dustforceHoldingRole);
+    if (message.content === '!verify' && message.member.roles.has(holdingRole.id)) {
+      message.member.removeRole(holdingRole);
     }
   }
-  if (message.channel.id === dustforceMainChannel.id) {
+  if (message.channel.id === dustforceChannel.id) {
     if (streamCommandRegex.test(message.content)) {
       let applyWeirdCase = !streamNotCased.test(message.content);
       let streams = twitch.getStreams();
@@ -154,6 +156,8 @@ dustforceDiscord.on('message', (message) => {
         }
       }
     }
+  }
+  if (message.channel.id === dustforceChannel.id || message.channel.id === racesChannel.id || message.channel.id === tasforceChannel.id || message.channel.id === mapmakingChannel.id) {
     let noThumbnailRegex = /^(\.|!)(nt)$/i;
     if (message.content.indexOf('dustkid.com/replay/') !== -1 && !noThumbnailRegex.test(message.content.split(/ |\n/)[0])) {
       let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(/ |\n/)[0].replace(/[^0-9\-]/g, ''));
@@ -372,7 +376,7 @@ function createReplayMessage (replay, type, previous, firstSS) {
       "timestamp": new Date(Number(replay.timestamp) * 1000)
     }
   };
-  dustforceLeaderboardsChannel.send(replayMessage).then((message) => {
+  leaderboardUpdatesChannel.send(replayMessage).then((message) => {
     //
   }).catch((err) => {
     console.error(err);
