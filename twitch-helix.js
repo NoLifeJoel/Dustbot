@@ -4,9 +4,6 @@ const streamEmitter = new EventEmitter();
 let startup = false;
 twitch.clientID = require('./tokens')["twitch-client-id"];
 let streams = { };
-let gliStream = {
-  "timer": 0
-};
 function streamLoop () {
   twitch.streams.getStreams({
     "game_id": [
@@ -69,9 +66,6 @@ setInterval(() => {
     if (streams[stream]["timer"] < 1) {
       delete streams[stream];
     }
-  }
-  if (gliStream.timer > 0) {
-    gliStream.timer--;
   }
 }, 20000);
 streamEmitter.getStreams = () => {
