@@ -22,9 +22,6 @@ const token = require('./tokens')["dustforce-discord"];
 const twitter_credentials = require('./tokens')["twitter"];
 const twitch = require('./twitch-helix');
 const replays = require('./replays');
-/*const EventEmitter = require('events');
-const replays = new EventEmitter();
-const twitch = new EventEmitter();*/
 const replayTools = require('./replayTools');
 const request = require('./request');
 const querystring = require('querystring');
@@ -49,6 +46,30 @@ class DiscordChannel {
       }
     });
   }
+  startTyping (num) {
+    if (dustforceDiscord.ws.connection !== null && dustforceDiscord.status === 0) {
+      let channel = dustforceDiscord.channels.get(this.id);
+      if (typeof channel !== 'undefined') {
+        channel.startTyping(num);
+      } else {
+        //console.log('Discord connection open, but ' + this.id + ' channel wasn\'t found.');
+      }
+    } else {
+      //console.log('Discord connection not open. (Tried to send startTyping to ' + this.id + ' channel)');
+    }
+  }
+  stopTyping (force=false) {
+    if (dustforceDiscord.ws.connection !== null && dustforceDiscord.status === 0) {
+      let channel = dustforceDiscord.channels.get(this.id);
+      if (typeof channel !== 'undefined') {
+        channel.stopTyping(force);
+      } else {
+        //console.log('Discord connection open, but ' + this.id + ' channel wasn\'t found.');
+      }
+    } else {
+      //console.log('Discord connection not open. (Tried to send stopTyping to ' + this.id + ' channel)');
+    }
+  }
 }
 const dustforceChannel = new DiscordChannel('276106941875355658');
 const leaderboardUpdatesChannel = new DiscordChannel('204159286966747136');
@@ -56,15 +77,18 @@ const holdingChannel = new DiscordChannel('533384972283936788');
 const mapmakingChannel = new DiscordChannel('275015117236731905');
 const tasforceChannel = new DiscordChannel('202307017581395968');
 const racesChannel = new DiscordChannel('298677601881292800');
+const botDevelopmentChannel = new DiscordChannel('500686179851698226');
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);
 twitch.on('dustforceStream', (stream) => {
+  dustforceChannel.startTyping(1);
   dustforceChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
     //console.log(message);
   }).catch((e) => {
     console.error(e);
   });
+  dustforceChannel.stopTyping();
 });
 dustforceDiscord.on('ready', () => {
   dustforceDiscord.user.setPresence({
@@ -115,6 +139,7 @@ dustforceDiscord.on('message', (message) => {
   }
   if (message.channel.id === dustforceChannel.id) {
     if (streamCommandRegex.test(message.content)) {
+      message.channel.startTyping(1);
       let applyWeirdCase = !streamNotCased.test(message.content);
       let streams = twitch.getStreams();
       let nobodyStreaming = 'Nobody is streaming.';
@@ -127,6 +152,7 @@ dustforceDiscord.on('message', (message) => {
           nobodyStreaming = toWeirdCase(message.content, nobodyStreaming);
         }
         message.channel.send(nobodyStreaming);
+        message.channel.stopTyping();
       } else {
         let streamsString = '';
         for (let stream of Object.keys(streams)) {
@@ -150,19 +176,22 @@ dustforceDiscord.on('message', (message) => {
             unknownStreaming = toWeirdCase(message.content, unknownStreaming);
           }
           message.channel.send(unknownStreaming);
+          message.channel.stopTyping();
         } else {
           streamsString = streamsString.slice(0, -1);
           message.channel.send(streamsString);
+          message.channel.stopTyping();
         }
       }
     }
   }
-  if (message.channel.id === dustforceChannel.id || message.channel.id === racesChannel.id || message.channel.id === tasforceChannel.id || message.channel.id === mapmakingChannel.id) {
+  if (message.channel.id === dustforceChannel.id || message.channel.id === racesChannel.id || message.channel.id === tasforceChannel.id || message.channel.id === mapmakingChannel.id || message.channel.id === botDevelopmentChannel.id) {
     let noThumbnailRegex = /^(\.|!)(nt)$/i;
     if (message.content.indexOf('dustkid.com/replay/') !== -1 && !noThumbnailRegex.test(message.content.split(/ |\n/)[0])) {
       let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(/ |\n/)[0].replace(/[^0-9\-]/g, ''));
       if (typeof replay_id === 'number' && !isNaN(replay_id)) {
         let responseCounter = 0;
+        message.channel.startTyping(1);
         request({
           "host": 'dustkid.com',
           "path": '/replayviewer.php?' + querystring.stringify({
@@ -227,8 +256,12 @@ dustforceDiscord.on('message', (message) => {
               console.log('messageSendCounter: ' + messageSendCounter);
               messageSendCounter++;
             }
+            return;
           }).catch((e) => {
             console.error(e);
+            return;
+          }).then(() => {
+            message.channel.stopTyping();
           });
         }).catch((e) => {
           console.error(e);
@@ -252,6 +285,7 @@ replays.on('replay', (replay) => {
       if (typeof replay["previous_score_pb"] !== 'undefined') {
         previous = replay["previous_score_pb"];
       }
+      leaderboardUpdatesChannel.startTyping(1);
       createReplayMessage(replay, "Score", previous, true);
     }
     if (replay.score_rank_pb && replay.score_tied_with < 11) {
@@ -259,6 +293,7 @@ replays.on('replay', (replay) => {
       if (typeof replay["previous_score_pb"] !== 'undefined') {
         previous = replay["previous_score_pb"];
       }
+      leaderboardUpdatesChannel.startTyping(1);
       createReplayMessage(replay, "Score", previous, false);
     }
     if (replay.time_rank_pb && replay.time_tied_with < 11) {
@@ -266,6 +301,7 @@ replays.on('replay', (replay) => {
       if (typeof replay["previous_time_pb"] !== 'undefined') {
         previous = replay["previous_time_pb"];
       }
+      leaderboardUpdatesChannel.startTyping(1);
       createReplayMessage(replay, "Time", previous, false);
     }
   }
@@ -377,9 +413,12 @@ function createReplayMessage (replay, type, previous, firstSS) {
     }
   };
   leaderboardUpdatesChannel.send(replayMessage).then((message) => {
-    //
+    return;
   }).catch((err) => {
     console.error(err);
+    return;
+  }).then(() => {
+    leaderboardUpdatesChannel.stopTyping();
   });
 }
 dustforceDiscord.on('disconnect', () => {
