@@ -21,6 +21,7 @@ const dustforceDiscord = new Discord.Client();
 const token = require('./tokens')["dustforce-discord"];
 const twitter_credentials = require('./tokens')["twitter"];
 const twitch = require('./twitch-helix');
+const mixer = require('./mixer');
 const replays = require('./replays');
 const replayTools = require('./replayTools');
 const request = require('./request');
@@ -90,6 +91,15 @@ twitch.on('dustforceStream', (stream) => {
   });
   dustforceChannel.stopTyping();
 });
+mixer.on('dustforceStream', (stream) => {
+  dustforceChannel.startTyping(1);
+  dustforceChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
+    //console.log(message);
+  }).catch((e) => {
+    console.error(e);
+  });
+  dustforceChannel.stopTyping();
+});
 dustforceDiscord.on('ready', () => {
   dustforceDiscord.user.setPresence({
     "status": 'online',
@@ -142,6 +152,10 @@ dustforceDiscord.on('message', (message) => {
       message.channel.startTyping(1);
       let applyWeirdCase = !streamNotCased.test(message.content);
       let streams = twitch.getStreams();
+      let mixerStreams = mixer.getStreams();
+      for (let stream in mixerStreams) {
+        streams[stream] = mixerStreams[stream];
+      }
       let nobodyStreaming = 'Nobody is streaming.';
       let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
       if (Object.keys(streams).length === 0) {

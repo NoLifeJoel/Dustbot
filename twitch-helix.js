@@ -14,13 +14,14 @@ function streamLoop () {
     let res = data.response.data;
     let user_ids = [ ];
     for (let stream of res) {
+      let user_id = 'twitch/' + stream["user_id"];
       user_ids.push(stream["user_id"]);
-      if (typeof streams[stream["user_id"]] === 'undefined') {
-        streams[stream["user_id"]] = { };
+      if (typeof streams[user_id] === 'undefined') {
+        streams[user_id] = { };
       }
-      streams[stream["user_id"]]["timer"] = 15;
-      streams[stream["user_id"]]["title"] = stream["title"];
-      streams[stream["user_id"]]["viewer_count"] = stream["viewer_count"];
+      streams[user_id]["timer"] = 15;
+      streams[user_id]["title"] = stream["title"];
+      streams[user_id]["viewer_count"] = stream["viewer_count"];
     }
     if (user_ids.length > 0) {
       return twitch.users.getUsers({
@@ -34,20 +35,21 @@ function streamLoop () {
     }
     let res = data.response.data;
     for (let stream of res) {
-      if (typeof streams[stream["id"]]["url"] === 'undefined') {
+      let user_id = 'twitch/' + stream["id"];
+      if (typeof streams[user_id]["url"] === 'undefined') {
         if (startup === true) {
           streamEmitter.emit('dustforceStream', {
             "url": 'https://www.twitch.tv/' + stream["login"],
-            "title": streams[stream["id"]]["title"],
+            "title": streams[user_id]["title"],
             "id": stream["id"],
             "display_name": stream["display_name"],
             "login": stream["login"]
           });
         }
       }
-      streams[stream["id"]]["url"] = 'https://www.twitch.tv/' + stream["login"];
-      streams[stream["id"]]["display_name"] = stream["display_name"];
-      streams[stream["id"]]["login"] = stream["login"];
+      streams[user_id]["url"] = 'https://www.twitch.tv/' + stream["login"];
+      streams[user_id]["display_name"] = stream["display_name"];
+      streams[user_id]["login"] = stream["login"];
     }
     return;
   }).catch((e) => {
