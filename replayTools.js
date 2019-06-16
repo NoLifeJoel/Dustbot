@@ -41,7 +41,7 @@ module.exports = {
     }
   },
   "rankToStr": (rank) => {
-    if (rank === 11 || rank === 12 || rank === 13) {
+    if (rank % 100 === 11 || rank % 100 === 12 || rank % 100 === 13) {
       return rank + 'th';
     }
     switch (rank % 10) {
