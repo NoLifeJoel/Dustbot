@@ -117,7 +117,7 @@ function toWeirdCase (pattern, str) {
   return str.split('').map((v, i) => {
     const offset = 1;
     const character = pattern[(i % (length - offset)) + offset];
-    if(character === character.toLowerCase()) {
+    if (character === character.toLowerCase()) {
       return v.toLowerCase();
     }
     return v.toUpperCase()
@@ -168,7 +168,7 @@ dustforceDiscord.on('message', (message) => {
         if (stweamCommandRegex.test(message.content)) {
           nobodyStreaming = uwu(nobodyStreaming);
         }
-        if(applyStrimFormat) {
+        if (applyStrimFormat) {
           nobodyStreaming = toStrimFormat(nobodyStreaming);
         }
         if (applyWeirdCase) {
@@ -183,7 +183,7 @@ dustforceDiscord.on('message', (message) => {
           if (stweamCommandRegex.test(message.content)) {
             streamTitle = uwu(streamTitle);
           }
-          if(applyStrimFormat) {
+          if (applyStrimFormat) {
             streamTitle = toStrimFormat(streamTitle);
           }
           if (applyWeirdCase) {
@@ -198,7 +198,7 @@ dustforceDiscord.on('message', (message) => {
           if (stweamCommandRegex.test(message.content)) {
             unknownStreaming = uwu(unknownStreaming);
           }
-          if(applyStrimFormat) {
+          if (applyStrimFormat) {
             unknownStreaming = toStrimFormat(unknownStreaming);
           }
           if (applyWeirdCase) {
