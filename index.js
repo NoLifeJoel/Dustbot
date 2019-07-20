@@ -1,16 +1,7 @@
 /*
   Requirements for running this:
-    A file named tokens.js in the same directory of this file with the following content:
-      module.exports = {
-        "twitch-client-id": 'client-id', // Client ID from the twitch website in the developers section.
-        "discord": 'token', // Client token from the discord website in the developers section.
-        "twitter": {
-          "consumer_key": 'key',
-          "consumer_secret": 'secret',
-          "access_token": 'token',
-          "access_token_secret": 'secret'
-        }
-      }
+    Copy `config.example.js` -> `config.js`, and update the values within.
+      
     Dependencies from npm:
       discord.js,
       twitch-helix-api
@@ -18,8 +9,9 @@
 */
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
-const token = require('./tokens')["dustforce-discord"];
-const twitter_credentials = require('./tokens')["twitter"];
+const config = require('./config');
+const token = config["dustforce-discord"];
+const twitter_credentials = config["twitter"];
 const twitch = require('./twitch-helix');
 const mixer = require('./mixer');
 const replays = require('./replays');
@@ -72,13 +64,13 @@ class DiscordChannel {
     }
   }
 }
-const dustforceChannel = new DiscordChannel('276106941875355658');
-const leaderboardUpdatesChannel = new DiscordChannel('204159286966747136');
-const holdingChannel = new DiscordChannel('533384972283936788');
-const mapmakingChannel = new DiscordChannel('275015117236731905');
-const tasforceChannel = new DiscordChannel('202307017581395968');
-const racesChannel = new DiscordChannel('298677601881292800');
-const botDevelopmentChannel = new DiscordChannel('500686179851698226');
+const dustforceChannel = new DiscordChannel(config.channels.dustforce);
+const leaderboardUpdatesChannel = new DiscordChannel(config.channels.leaderboardUpdates);
+const holdingChannel = new DiscordChannel(config.channels.holding);
+const mapmakingChannel = new DiscordChannel(config.channels.mapmaking);
+const tasforceChannel = new DiscordChannel(config.channels.tasforce);
+const racesChannel = new DiscordChannel(config.channels.races);
+const botDevelopmentChannel = new DiscordChannel(config.channels.botDevelopment);
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);
@@ -121,7 +113,18 @@ function uwu (str) {
   return str;
 }
 function toWeirdCase (pattern, str) {
-  return str.split('').map((v, i) => pattern[i%7+1] === pattern[i%7+1].toLowerCase() ? v.toLowerCase() : v.toUpperCase()).join('');
+  const length = pattern.length;
+  return str.split('').map((v, i) => {
+    const offset = 1;
+    const character = pattern[(i % (length - offset)) + offset];
+    if (character === character.toLowerCase()) {
+      return v.toLowerCase();
+    }
+    return v.toUpperCase();
+  }).join('');
+}
+function toStrimFormat(message) {
+  return message.replace(/st(r|w)eam/i, "st$1im").replace(/st(r|w)iming/i, "st$1imming");
 }
 let holdingRole = null;
 dustforceDiscord.on('guildMemberAdd', (member) => {
@@ -136,9 +139,10 @@ dustforceDiscord.on('guildMemberAdd', (member) => {
   }
 });
 dustforceDiscord.on('message', (message) => {
-  let streamCommandRegex = /^(\.|!)(st(r|w)eams)$/i;
-  let stweamCommandRegex = /^(\.|!)(stweams)$/i;
-  let streamNotCased = /^(\.|!)(st(r|w)eams)$/;
+  let streamCommandRegex = /^(\.|!)(st(r|w)(ea|i)ms)$/i;
+  let stweamCommandRegex = /^(\.|!)(stw(ea|i)ms)$/i;
+  let strimCommandRegex = /^(\.|!)(st(r|w)ims)$/i;
+  let streamNotCased = /^(\.|!)(st(r|w)(ea|i)ms)$/;
   if (message.channel.id === holdingChannel.id) {
     if (holdingRole === null) {
       holdingRole = message.member.guild.roles.find((role) => role.name === 'holding');
@@ -151,6 +155,7 @@ dustforceDiscord.on('message', (message) => {
     if (streamCommandRegex.test(message.content)) {
       message.channel.startTyping(1);
       let applyWeirdCase = !streamNotCased.test(message.content);
+      let applyStrimFormat = strimCommandRegex.test(message.content);
       let streams = twitch.getStreams();
       let mixerStreams = mixer.getStreams();
       for (let stream in mixerStreams) {
@@ -161,6 +166,9 @@ dustforceDiscord.on('message', (message) => {
       if (Object.keys(streams).length === 0) {
         if (stweamCommandRegex.test(message.content)) {
           nobodyStreaming = uwu(nobodyStreaming);
+        }
+        if (applyStrimFormat) {
+          nobodyStreaming = toStrimFormat(nobodyStreaming);
         }
         if (applyWeirdCase) {
           nobodyStreaming = toWeirdCase(message.content, nobodyStreaming);
@@ -174,6 +182,9 @@ dustforceDiscord.on('message', (message) => {
           if (stweamCommandRegex.test(message.content)) {
             streamTitle = uwu(streamTitle);
           }
+          if (applyStrimFormat) {
+            streamTitle = toStrimFormat(streamTitle);
+          }
           if (applyWeirdCase) {
             streamTitle = toWeirdCase(message.content, streamTitle);
           }
@@ -185,6 +196,9 @@ dustforceDiscord.on('message', (message) => {
         if (streamsString === '') {
           if (stweamCommandRegex.test(message.content)) {
             unknownStreaming = uwu(unknownStreaming);
+          }
+          if (applyStrimFormat) {
+            unknownStreaming = toStrimFormat(unknownStreaming);
           }
           if (applyWeirdCase) {
             unknownStreaming = toWeirdCase(message.content, unknownStreaming);
