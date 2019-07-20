@@ -120,7 +120,7 @@ function toWeirdCase (pattern, str) {
     if (character === character.toLowerCase()) {
       return v.toLowerCase();
     }
-    return v.toUpperCase()
+    return v.toUpperCase();
   }).join('');
 }
 function toStrimFormat(message) {
