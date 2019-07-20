@@ -1,16 +1,7 @@
 /*
   Requirements for running this:
-    A file named tokens.js in the same directory of this file with the following content:
-      module.exports = {
-        "twitch-client-id": 'client-id', // Client ID from the twitch website in the developers section.
-        "discord": 'token', // Client token from the discord website in the developers section.
-        "twitter": {
-          "consumer_key": 'key',
-          "consumer_secret": 'secret',
-          "access_token": 'token',
-          "access_token_secret": 'secret'
-        }
-      }
+    Copy `config.example.js` -> `config.js`, and update the values within.
+      
     Dependencies from npm:
       discord.js,
       twitch-helix-api
@@ -18,8 +9,9 @@
 */
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
-const token = require('./tokens')["dustforce-discord"];
-const twitter_credentials = require('./tokens')["twitter"];
+const config = require('./config');
+const token = config["dustforce-discord"];
+const twitter_credentials = config["twitter"];
 const twitch = require('./twitch-helix');
 const mixer = require('./mixer');
 const replays = require('./replays');
@@ -72,13 +64,13 @@ class DiscordChannel {
     }
   }
 }
-const dustforceChannel = new DiscordChannel('276106941875355658');
-const leaderboardUpdatesChannel = new DiscordChannel('204159286966747136');
-const holdingChannel = new DiscordChannel('533384972283936788');
-const mapmakingChannel = new DiscordChannel('275015117236731905');
-const tasforceChannel = new DiscordChannel('202307017581395968');
-const racesChannel = new DiscordChannel('298677601881292800');
-const botDevelopmentChannel = new DiscordChannel('500686179851698226');
+const dustforceChannel = new DiscordChannel(config.channels.dustforce);
+const leaderboardUpdatesChannel = new DiscordChannel(config.channels.leaderboardUpdates);
+const holdingChannel = new DiscordChannel(config.channels.holding);
+const mapmakingChannel = new DiscordChannel(config.channels.mapmaking);
+const tasforceChannel = new DiscordChannel(config.channels.tasforce);
+const racesChannel = new DiscordChannel(config.channels.races);
+const botDevelopmentChannel = new DiscordChannel(config.channels.botDevelopment);
 setTimeout(() => {
   dustforceDiscord.login(token);
 }, 5000);

@@ -60,3 +60,4 @@ typings/
 *.sh
 auto_verify.js
 tokens.js
+config.js
