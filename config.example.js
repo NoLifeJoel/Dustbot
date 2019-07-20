@@ -15,5 +15,8 @@ module.exports = {
     "tasforce": '202307017581395968',
     "races": '298677601881292800',
     "botDevelopment": '500686179851698226'
-  }
+  },
+  "auto-verify" : [
+    // Array of Discord User ID's exempt from bot verification.
+  ]
 };
