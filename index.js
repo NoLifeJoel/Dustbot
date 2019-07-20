@@ -124,8 +124,7 @@ function toWeirdCase (pattern, str) {
   }).join('');
 }
 function toStrimFormat(message) {
-  return message.replace(/st(r|w)eam/i, "st$1im")
-    .replace(/st(r|w)iming/i, "st$1imming");
+  return message.replace(/st(r|w)eam/i, "st$1im").replace(/st(r|w)iming/i, "st$1imming");
 }
 let holdingRole = null;
 dustforceDiscord.on('guildMemberAdd', (member) => {
