@@ -10,6 +10,7 @@
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
 const config = require('./config');
+const auto_verify = config['auto-verify']; // Array of User ID's exempt from bot verification.
 const token = config["dustforce-discord"];
 const twitter_credentials = config["twitter"];
 const twitch = require('./twitch-helix');
@@ -20,7 +21,6 @@ const request = require('./request');
 const querystring = require('querystring');
 const Twit = require('twit');
 const twitter = new Twit(twitter_credentials);
-const auto_verify = require('./auto_verify'); // Array of User ID's exempt from bot verification.
 class DiscordChannel {
   constructor (id) {
     this.id = id;
