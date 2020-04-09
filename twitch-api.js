@@ -5,7 +5,6 @@ const config = JSON.parse(fs.readFileSync('config.json', 'utf-8')).twitch;
 let token_timer = 0;
 let token_valid = false;
 function writeToken (newToken) {
-	console.log('Writing new token to config.');
 	config.client_token = newToken;
 	fs.readFile('config.js', 'utf-8').then((data) => {
 		data = JSON.parse(data);
@@ -16,7 +15,7 @@ function writeToken (newToken) {
 				console.error(e);
 			});
 		}
-	})
+	});
 }
 function apiRequest (path, query) {
 	query = querystring.stringify(query);
@@ -49,6 +48,7 @@ function getToken () {
 		token_timer = res.expires_in;
 		console.log('A new token has been fetched, it expires in ' + res.expires_in + ' seconds.');
 		token_valid = true;
+		writeToken(res.access_token);
 		return res.access_token;
 	});
 }
