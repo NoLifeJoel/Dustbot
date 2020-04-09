@@ -55,6 +55,3 @@ streamEmitter.getStreams = () => {
   return streams;
 }
 module.exports = streamEmitter;
-streamEmitter.on('dustforceStream', (stream) => {
-  console.log(stream);
-});

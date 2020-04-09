@@ -23,5 +23,6 @@ function writeFile (file, data, options) {
 }
 module.exports = {
   "readFile": readFile,
-  "writeFile": writeFile
+  "writeFile": writeFile,
+  "readFileSync": fs.readFileSync
 };

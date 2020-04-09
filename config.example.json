@@ -1,0 +1,34 @@
+{
+  "twitch": {
+    "client_id": "client_id", // Client ID from the twitch website in the developers section.
+    "client_secret": "client_secret", // Client secret from the twitch website in the developers section.
+    /**
+     *  Client token if you have one, otherwise put null.
+     *  If you put null, a token will be retrieved and config.json will be updated with the new token.
+     *  If the token has expired or is invalid, this bot will automatically retrieve a new one.
+     *  This bot will check for token validity every 20 minutes, if the token expires in 30 minutes or less a new one will be retrieved.
+     */
+    "client_token": "client_token"
+  },
+  "discord_token": "token", // Client token from the discord website in the developers section.
+  "twitter": {
+    "consumer_key": "key",
+    "consumer_secret": "secret",
+    "access_token": "token",
+    "access_token_secret": "secret"
+  },
+  "channels": {
+    "dustforce": "276106941875355658",
+    "leaderboardUpdates": "204159286966747136",
+    "holding": "533384972283936788",
+    "mapmaking": "275015117236731905",
+    "tasforce": "202307017581395968",
+    "races": "298677601881292800",
+    "botDevelopment": "500686179851698226"
+  },
+  "auto_verify" : [
+    // Array of Discord User ID's exempt from bot verification.
+  ],
+  "mixer_client_id": "client-id",
+  "last_replay": 8036228
+}

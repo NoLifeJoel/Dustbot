@@ -1,18 +1,17 @@
 /*
   Requirements for running this:
-    Copy `config.example.js` -> `config.js`, and update the values within.
+    Copy `config.example.json` -> `config.json`, and update the values within.
       
     Dependencies from npm:
-      discord.js,
-      twitch-helix-api
-      twit
+      discord.js, twit
 */
+const fs = require('./filesystem');
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
-const config = require('./config');
-const auto_verify = config['auto-verify']; // Array of User ID's exempt from bot verification.
-const token = config["dustforce-discord"];
-const twitter_credentials = config["twitter"];
+const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+const auto_verify = config.auto_verify; // Array of User ID's exempt from bot verification.
+const token = config.discord_token;
+const twitter_credentials = config.twitter;
 const twitch = require('./twitch-helix');
 const mixer = require('./mixer');
 const replays = require('./replays');

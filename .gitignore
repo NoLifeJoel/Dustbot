@@ -58,6 +58,6 @@ typings/
 .env
 
 *.sh
-auto_verify.js
-tokens.js
-config.js
+config.json
+.eslintrc.js
+config_backup.json

@@ -7,14 +7,14 @@ const replayEmitter = new EventEmitter();
 let last_replay;
 let nullAttempts = 0;
 setTimeout(() => {
-  fs.readFile('last_replay', 'utf8').then((data) => {
+  fs.readFile('config.json', 'utf8').then((data) => {
     data = JSON.parse(data);
-    if (typeof data === 'number') {
-      last_replay = data;
+    if (typeof data === 'object') {
+      last_replay = data.last_replay;
       getReplay(last_replay, true);
       return;
     }
-    throw new Error('Couldn\'t parse last_replay.txt as a number.');
+    throw new Error('Couldn\'t parse config.json\'s last_replay value as a number.');
   }).catch((e) => {
     throw new Error(e); // Crash the script, we NEED this file.
   });
@@ -73,8 +73,13 @@ function getReplay (replay_id, loop=false) {
         return response;
       });
     }
-    fs.writeFile('last_replay', last_replay, 'utf8').catch((error) => {
-      console.error(error);
+    fs.readFile('config.json', 'utf-8').then((data) => {
+      data = JSON.parse(data);
+      data.last_replay = last_replay;
+      data = JSON.stringify(data, null, 2);
+      fs.writeFile('config.json', data, 'utf-8').catch((error) => {
+        console.error(error);
+      });
     });
     replayEmitter.emit('replay', replay);
     return null;

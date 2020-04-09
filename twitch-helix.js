@@ -1,15 +1,13 @@
-const twitch = require('twitch-helix-api');
+const twitch = require('./twitch-api');
 const EventEmitter = require('events');
 const streamEmitter = new EventEmitter();
 let startup = false;
-twitch.clientID = require('./config')["twitch-client-id"];
 let streams = { };
 let xiamul_stream = false;
 let handleGetStreams = (data) => {
-  if (xiamul_stream) return null;
-  let res = data.response.data;
+  if (xiamul_stream || data === null) return null;
   let user_ids = [ ];
-  for (let stream of res) {
+  for (let stream of data.data) {
     if (stream["user_id"] === '29504346') {
       xiamul_stream = true;
     }
@@ -31,8 +29,7 @@ let handleGetStreams = (data) => {
 }
 let handleUserData = (data) => {
   if (data === null) return;
-  let res = data.response.data;
-  for (let stream of res) {
+  for (let stream of data.data) {
     let user_id = 'twitch/' + stream["id"];
     if (typeof streams[user_id]["url"] === 'undefined') {
       if (startup === true) {
@@ -60,7 +57,7 @@ function streamLoop () {
     ],
     "type": 'live'
   }).then(handleGetStreams).then(handleUserData).then(() => {
-    if (xiamul_stream || !(current_time.getDate() === 10 && current_time.getMonth() === 9)) return;
+    if (xiamul_stream || !(current_time.getDate() === 10 && current_time.getMonth() === 9)) return null;
     return twitch.streams.getStreams({
       "user_id": [
         '29504346'
@@ -75,7 +72,7 @@ function streamLoop () {
     setTimeout(streamLoop, 30000);
   });
 }
-setTimeout(streamLoop, 5000);
+setTimeout(streamLoop, 10000);
 setInterval(() => {
   for (let stream of Object.keys(streams)) {
     streams[stream]["timer"]--;

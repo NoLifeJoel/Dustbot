@@ -1,6 +1,6 @@
 {
   "name": "dustforce",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Posts twitch streams to discord, replay data to the discord & twitter.",
   "main": "index.js",
   "scripts": {
@@ -18,8 +18,7 @@
   "homepage": "https://github.com/NoLifeJoel/Dustforce#readme",
   "dependencies": {
     "discord.js": "^11.5.1",
-    "twit": "^2.2.11",
-    "twitch-helix-api": "^1.0.1"
+    "twit": "^2.2.11"
   },
   "engines": {
     "node": "^>=10.0.0"
