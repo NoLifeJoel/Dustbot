@@ -1,6 +1,8 @@
 const twitch = require('./twitch-api');
+const fs = require('./filesystem');
 const EventEmitter = require('events');
 const streamEmitter = new EventEmitter();
+const config = require('./config.json');
 let startup = false;
 let streams = { };
 let xiamul_stream = false;
@@ -8,6 +10,7 @@ let handleGetStreams = (data) => {
   if (xiamul_stream || data === null) return null;
   let user_ids = [ ];
   for (let stream of data.data) {
+    if (typeof config.twitch.blacklist[stream["user_id"]] !== "undefined") continue;
     if (stream["user_id"] === '29504346') {
       xiamul_stream = true;
     }
@@ -32,7 +35,7 @@ let handleUserData = (data) => {
   for (let stream of data.data) {
     let user_id = 'twitch/' + stream["id"];
     if (typeof streams[user_id]["url"] === 'undefined') {
-      if (startup === true) {
+      if (startup === true && typeof config.twitch.blacklist[stream["id"]] === "undefined") {
         streamEmitter.emit('dustforceStream', {
           "url": 'https://www.twitch.tv/' + stream["login"],
           "title": streams[user_id]["title"],
@@ -53,6 +56,7 @@ function streamLoop () {
   let current_time = new Date();
   twitch.streams.getStreams({
     "game_id": [
+      '1436588895',
       '29093'
     ],
     "type": 'live'
@@ -83,5 +87,24 @@ setInterval(() => {
 }, 20000);
 streamEmitter.getStreams = () => {
   return streams;
+}
+streamEmitter.banStream = (username) => {
+  twitch.users.getUsers({
+    "login": username
+  }).then((user) => {
+    user = user.data[0]
+    config.twitch.blacklist[user.id] = {
+      "login": user.login,
+      "display_name": user.display_name
+    };
+    fs.writeFile('config.json', JSON.stringify(config, null, 2), 'utf-8').catch((error) => {
+      console.error(error);
+    });
+  }).catch((error) => {
+    console.error(error);
+  });
+}
+streamEmitter.getBannedStreams = () => {
+  return config.twitch.blacklist;
 }
 module.exports = streamEmitter;

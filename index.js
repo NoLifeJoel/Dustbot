@@ -5,15 +5,12 @@
     Dependencies from npm:
       discord.js, twit
 */
-const fs = require('./filesystem');
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
-const config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+const config = require('./config.json');
 const auto_verify = config.auto_verify; // Array of User ID's exempt from bot verification.
-const token = config.discord_token;
 const twitter_credentials = config.twitter;
 const twitch = require('./twitch-helix');
-const mixer = require('./mixer');
 const replays = require('./replays');
 const replayTools = require('./replayTools');
 const request = require('./request');
@@ -26,8 +23,8 @@ class DiscordChannel {
   }
   send (msg) {
     return new Promise ((resolve, reject) => {
-      if (dustforceDiscord.ws.connection !== null && dustforceDiscord.status === 0) {
-        let channel = dustforceDiscord.channels.get(this.id);
+      if (dustforceDiscord.ws.connection !== null && dustforceDiscord.ws.status === 0) {
+        let channel = dustforceDiscord.channels.cache.get(this.id);
         if (typeof channel !== 'undefined') {
           resolve(channel.send(msg));
         } else {
@@ -39,8 +36,8 @@ class DiscordChannel {
     });
   }
   startTyping (num) {
-    if (dustforceDiscord.ws.connection !== null && dustforceDiscord.status === 0) {
-      let channel = dustforceDiscord.channels.get(this.id);
+    if (dustforceDiscord.ws.connection !== null && dustforceDiscord.ws.status === 0) {
+      let channel = dustforceDiscord.channels.cache.get(this.id);
       if (typeof channel !== 'undefined') {
         channel.startTyping(num);
       } else {
@@ -51,8 +48,8 @@ class DiscordChannel {
     }
   }
   stopTyping (force=false) {
-    if (dustforceDiscord.ws.connection !== null && dustforceDiscord.status === 0) {
-      let channel = dustforceDiscord.channels.get(this.id);
+    if (dustforceDiscord.ws.connection !== null && dustforceDiscord.ws.status === 0) {
+      let channel = dustforceDiscord.channels.cache.get(this.id);
       if (typeof channel !== 'undefined') {
         channel.stopTyping(force);
       } else {
@@ -69,20 +66,12 @@ const holdingChannel = new DiscordChannel(config.channels.holding);
 const mapmakingChannel = new DiscordChannel(config.channels.mapmaking);
 const tasforceChannel = new DiscordChannel(config.channels.tasforce);
 const racesChannel = new DiscordChannel(config.channels.races);
-const botDevelopmentChannel = new DiscordChannel(config.channels.botDevelopment);
+const modChannel = new DiscordChannel(config.channels.modChannel);
+const rulesInfoChannel = new DiscordChannel(config.channels["rules-info"]);
 setTimeout(() => {
-  dustforceDiscord.login(token);
+  dustforceDiscord.login(config.discord.token);
 }, 5000);
 twitch.on('dustforceStream', (stream) => {
-  dustforceChannel.startTyping(1);
-  dustforceChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
-    //console.log(message);
-  }).catch((e) => {
-    console.error(e);
-  });
-  dustforceChannel.stopTyping();
-});
-mixer.on('dustforceStream', (stream) => {
   dustforceChannel.startTyping(1);
   dustforceChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
     //console.log(message);
@@ -127,11 +116,15 @@ function toStrimFormat(message) {
 }
 let holdingRole = null;
 dustforceDiscord.on('guildMemberAdd', (member) => {
+  console.log("Member add @ server " + member.guild.id);
   if (member.guild.id === '83037671227658240') {
     if (holdingRole === null) {
       holdingRole = member.guild.roles.find((role) => role.name === 'holding');
+    } else {
+      console.log(holdingRole);
     }
-    if (auto_verify.indexOf(member.id) === -1) { 
+    if (auto_verify.indexOf(member.id) === -1) {
+      console.log("Attempting role add..."); 
       member.addRole(holdingRole);
       holdingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
     }
@@ -156,10 +149,6 @@ dustforceDiscord.on('message', (message) => {
       let applyWeirdCase = !streamNotCased.test(message.content);
       let applyStrimFormat = strimCommandRegex.test(message.content);
       let streams = twitch.getStreams();
-      let mixerStreams = mixer.getStreams();
-      for (let stream in mixerStreams) {
-        streams[stream] = mixerStreams[stream];
-      }
       let nobodyStreaming = 'Nobody is streaming.';
       let unknownStreaming = 'At least 1 person is streaming. I\'ll push notification(s) after I finish gathering data.';
       if (Object.keys(streams).length === 0) {
@@ -212,7 +201,24 @@ dustforceDiscord.on('message', (message) => {
       }
     }
   }
-  if (message.channel.id === dustforceChannel.id || message.channel.id === racesChannel.id || message.channel.id === tasforceChannel.id || message.channel.id === mapmakingChannel.id || message.channel.id === botDevelopmentChannel.id) {
+  if (message.channel.id === modChannel.id) {
+    if (message.content.indexOf('!twitchban ') === 0) {
+      let username = message.content.substring(11).replace(/[^0-9a-z]/gi, '');
+      if (username !== '') {
+        twitch.banStream(username);
+      }
+    }
+    if (message.content === '!bannedStreams') {
+      message.channel.send(JSON.stringify(twitch.getBannedStreams(), null, 2));
+    }
+    if (message.content.indexOf('!rulesMessage\n') === 0) {
+      let messageContent = message.content.substring(14);
+      if (messageContent.length > 5) {
+        rulesInfoChannel.send(messageContent);
+      }
+    }
+  }
+  if (message.channel.id === dustforceChannel.id || message.channel.id === racesChannel.id || message.channel.id === tasforceChannel.id || message.channel.id === mapmakingChannel.id) {
     let noThumbnailRegex = /^(\.|!)(nt)$/i;
     if (message.content.indexOf('dustkid.com/replay/') !== -1 && !noThumbnailRegex.test(message.content.split(/ |\n/)[0])) {
       let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(/ |\n/)[0].replace(/[^0-9\-]/g, ''));
@@ -233,6 +239,10 @@ dustforceDiscord.on('message', (message) => {
           }
           responseCounter++;
           let replay = JSON.parse(response.data);
+          if (!replay) {
+            message.channel.stopTyping();
+            return;
+          }
           let tags = '';
           if (!Array.isArray(replay.tag)) {
             if (typeof replay.tag.version === 'string') {
@@ -450,6 +460,6 @@ function createReplayMessage (replay, type, previous, firstSS) {
 }
 dustforceDiscord.on('disconnect', () => {
   setTimeout(() => {
-    dustforceDiscord.login(token);
+    dustforceDiscord.login(config.discord.token);
   }, 10000);
 });

@@ -60,4 +60,3 @@ typings/
 *.sh
 config.json
 .eslintrc.js
-config_backup.json

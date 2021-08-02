@@ -1,20 +1,13 @@
 const request = require('./request');
 const querystring = require('querystring');
 const fs = require('./filesystem');
-const config = JSON.parse(fs.readFileSync('config.json', 'utf-8')).twitch;
+const config = require('./config.json');
 let token_timer = 0;
 let token_valid = false;
 function writeToken (newToken) {
-  config.client_token = newToken;
-  fs.readFile('config.js', 'utf-8').then((data) => {
-    data = JSON.parse(data);
-    if (typeof data === 'object') {
-      data.twitch.client_token = newToken;
-      data = JSON.stringify(data, null, 2);
-      fs.writeFile('config.json', data, 'utf-8').catch((error) => {
-        console.error(error);
-      });
-    }
+  config.twitch.client_token = newToken;
+  fs.writeFile('config.json', JSON.stringify(config, null, 2), 'utf-8').catch((error) => {
+    console.error(error);
   });
 }
 function apiRequest (path, query) {
@@ -24,12 +17,15 @@ function apiRequest (path, query) {
     "path": '/helix/' + path + '?' + query,
     "method": 'GET',
     "headers": {
-      "Authorization": 'Bearer ' + config.client_token,
-      "Client-ID": config.client_id
+      "Authorization": 'Bearer ' + config.twitch.client_token,
+      "Client-ID": config.twitch.client_id
     },
     "special": {
       "https": true
     }
+  }).then((response) => {
+    if (response.headers['content-type'] !== 'application/json; charset=utf-8') throw new Error("Response was not application/json");
+    return response;
   });
 }
 function getToken () {
@@ -37,8 +33,8 @@ function getToken () {
     "host": 'id.twitch.tv',
     "method": 'POST',
     "path": '/oauth2/token?' + querystring.stringify({
-      "client_id": config.client_id,
-      "client_secret": config.client_secret,
+      "client_id": config.twitch.client_id,
+      "client_secret": config.twitch.client_secret,
       "grant_type": 'client_credentials'
     }),
     "special": {
@@ -61,7 +57,7 @@ function validateToken (token) {
       "https": true
     },
     "headers": {
-      "Authorization": 'OAuth ' + config.client_token
+      "Authorization": 'OAuth ' + config.twitch.client_token
     }
   }).then((response) => {
     let res = JSON.parse(response.data);
@@ -81,18 +77,18 @@ function validateToken (token) {
   });
 }
 function tokenLoop () {
-  if (typeof config.client_token !== 'string') {
+  if (typeof config.twitch.client_token !== 'string') {
     console.log('twitch.client_token in config.js is not a string, fetching a new one...');
     getToken().then(() => {
       setTimeout(tokenLoop, 1200000);
     }).catch((error) => {
-      console.log(error);
+      console.error(error);
     });
   } else {
-    validateToken(config.client_token).then(() => {
+    validateToken(config.twitch.client_token).then(() => {
       setTimeout(tokenLoop, 1200000);
     }).catch((error) => {
-      console.log(error);
+      console.error(error);
     });
   }
 }
@@ -109,9 +105,10 @@ function getUsers (data) {
       if (typeof data.id !== 'undefined') query.id = data.id;
       apiRequest('users', query).then((response) => {
         resolve(JSON.parse(response.data));
-      }).catch((error) => {
-        console.log(error);
-      });
+      }).catch((e) => {
+        console.error(e);
+        reject('Error fetching twitch stream data.');
+      })
     }
   });
 }
@@ -128,9 +125,10 @@ function getStreams (data) {
       if (typeof data.type !== 'undefined') query.type = data.type;
       apiRequest('streams', query).then((response) => {
         resolve(JSON.parse(response.data));
-      }).catch((error) => {
-        console.log(error);
-      });
+      }).catch((e) => {
+        console.error(e);
+        reject('Error fetching twitch stream data.');
+      })
     }
   });
 }

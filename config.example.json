@@ -8,9 +8,21 @@
      *  If the token has expired or is invalid, this bot will automatically retrieve a new one.
      *  This bot will check for token validity every 20 minutes, if the token expires in 30 minutes or less a new one will be retrieved.
      */
-    "client_token": "client_token"
+    "client_token": "client_token",
+    /**
+     *  Used to prevent the bot from announcing repeat offense streams that go live that have nothing to do with Dustforce.
+     *  You can ban a stream by typing !twitchban [twitch username] in the mod channel.
+     */
+    "blacklist": {
+      "500521408": {
+        "login": "abdulqadirnaqsh",
+        "display_name": "abdulqadirnaqsh"
+      }
+    }
   },
-  "discord_token": "token", // Client token from the discord website in the developers section.
+  "discord": {
+    "token": "token" // Client token from the discord website in the developers section.
+  },
   "twitter": {
     "consumer_key": "key",
     "consumer_secret": "secret",
@@ -24,11 +36,11 @@
     "mapmaking": "275015117236731905",
     "tasforce": "202307017581395968",
     "races": "298677601881292800",
-    "botDevelopment": "500686179851698226"
+    "modChannel": "571214531309731850",
+    "rules-info": "731908030320607355"
   },
   "auto_verify" : [
     // Array of Discord User ID's exempt from bot verification.
   ],
-  "mixer_client_id": "client-id",
-  "last_replay": 8036228
+  "last_replay": 8565520
 }

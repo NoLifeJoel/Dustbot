@@ -1,23 +1,13 @@
 const request = require('./request');
+const config = require('./config.json');
 const fs = require('./filesystem');
 const replayTools = require('./replayTools');
 const querystring = require('querystring');
 const EventEmitter = require('events');
 const replayEmitter = new EventEmitter();
-let last_replay;
 let nullAttempts = 0;
 setTimeout(() => {
-  fs.readFile('config.json', 'utf8').then((data) => {
-    data = JSON.parse(data);
-    if (typeof data === 'object') {
-      last_replay = data.last_replay;
-      getReplay(last_replay, true);
-      return;
-    }
-    throw new Error('Couldn\'t parse config.json\'s last_replay value as a number.');
-  }).catch((e) => {
-    throw new Error(e); // Crash the script, we NEED this file.
-  });
+  getReplay(config.last_replay, true);
 }, 10000);
 function getReplay (replay_id, loop=false) {
   request({
@@ -60,7 +50,7 @@ function getReplay (replay_id, loop=false) {
     replay["score_tied_with"] = replay.score_rank - score_ties.length;
     replay["time_tied_with"] = replay.time_rank - time_ties.length;
     replay["loop"] = loop;
-    last_replay++;
+    config.last_replay++;
     if (replay["score_rank_pb"] || replay["time_rank_pb"]) {
       return request({
         "host": 'df.hitboxteam.com',
@@ -73,13 +63,8 @@ function getReplay (replay_id, loop=false) {
         return response;
       });
     }
-    fs.readFile('config.json', 'utf-8').then((data) => {
-      data = JSON.parse(data);
-      data.last_replay = last_replay;
-      data = JSON.stringify(data, null, 2);
-      fs.writeFile('config.json', data, 'utf-8').catch((error) => {
-        console.error(error);
-      });
+    fs.writeFile('config.json', JSON.stringify(config, null, 2), 'utf-8').catch((error) => {
+      console.error(error);
     });
     replayEmitter.emit('replay', replay);
     return null;
@@ -163,7 +148,7 @@ function getReplay (replay_id, loop=false) {
   }).then((replay) => {
     if (replay !== null) {
       replayEmitter.emit('replay', replay);
-      fs.writeFile('last_replay', last_replay, 'utf8').catch((error) => {
+      fs.writeFile('config.json', JSON.stringify(config, null, 2), 'utf-8').catch((error) => {
         console.error(error);
       });
     }
