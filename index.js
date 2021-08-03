@@ -8,7 +8,7 @@
 const Discord = require('discord.js');
 const dustforceDiscord = new Discord.Client();
 const config = require('./config.json');
-const auto_verify = config.auto_verify; // Array of User ID's exempt from bot verification.
+const auto_verify = config.auto_verify;
 const twitter_credentials = config.twitter;
 const twitch = require('./twitch-helix');
 const replays = require('./replays');
@@ -116,16 +116,12 @@ function toStrimFormat(message) {
 }
 let holdingRole = null;
 dustforceDiscord.on('guildMemberAdd', (member) => {
-  console.log("Member add @ server " + member.guild.id);
   if (member.guild.id === '83037671227658240') {
     if (holdingRole === null) {
-      holdingRole = member.guild.roles.find((role) => role.name === 'holding');
-    } else {
-      console.log(holdingRole);
+      holdingRole = member.guild.roles.cache.find((role) => role.name === 'holding');
     }
     if (auto_verify.indexOf(member.id) === -1) {
-      console.log("Attempting role add..."); 
-      member.addRole(holdingRole);
+      member.roles.add(holdingRole);
       holdingChannel.send('<@' + member.id + '> type !verify to see the other channels. This is an anti-bot measure.');
     }
   }
@@ -137,10 +133,10 @@ dustforceDiscord.on('message', (message) => {
   let streamNotCased = /^(\.|!)(st(r|w)(ea|i)ms)$/;
   if (message.channel.id === holdingChannel.id) {
     if (holdingRole === null) {
-      holdingRole = message.member.guild.roles.find((role) => role.name === 'holding');
+      holdingRole = message.member.guild.roles.cache.find((role) => role.name === 'holding');
     }
-    if (message.content === '!verify' && message.member.roles.has(holdingRole.id)) {
-      message.member.removeRole(holdingRole);
+    if (message.content === '!verify' && message.member.roles.cache.has(holdingRole.id)) {
+      message.member.roles.remove(holdingRole);
     }
   }
   if (message.channel.id === dustforceChannel.id) {

@@ -1,6 +1,6 @@
 {
   "name": "dustforce",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Posts twitch streams to discord, replay data to the discord & twitter.",
   "main": "index.js",
   "scripts": {
