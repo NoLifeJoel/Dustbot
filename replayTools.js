@@ -7,7 +7,7 @@ module.exports = {
       case 'b': return 3;
       case 'c': return 2;
       case 'd': return 1;
-      default : throw new Error();
+      default : throw new Error("Couldn't convert letter to score.");
     }
   },
   "scoreToLetter": (score) => {
@@ -18,26 +18,16 @@ module.exports = {
       case 3: return 'B';
       case 2: return 'C';
       case 1: return 'D';
-      default: throw new Error();
+      default: throw new Error("Couldn't convert score to letter.");
     }
   },
   "scoreToIcon": (score) => {
     switch (score) {
-      case 5:
-        return '<:S_:401764564699709442>';
-      break;
-      case 4:
-        return '<:A_:401764592575053825>';
-      break;
-      case 3:
-        return '<:B_:401764601215057920>';
-      break;
-      case 2:
-        return '<:C_:401764609721106453>';
-      break;
-      case 1:
-        return '<:D_:401764621746176001>';
-      break;
+      case 5: return '<:S_:401764564699709442>';
+      case 4: return '<:A_:401764592575053825>';
+      case 3: return '<:B_:401764601215057920>';
+      case 2: return '<:C_:401764609721106453>';
+      case 1: return '<:D_:401764621746176001>';
     }
   },
   "rankToStr": (rank) => {
@@ -45,18 +35,10 @@ module.exports = {
       return rank + 'th';
     }
     switch (rank % 10) {
-      case 1:
-        return rank + 'st';
-      break;
-      case 2:
-        return rank + 'nd';
-      break;
-      case 3:
-        return rank + 'rd';
-      break;
-      default:
-        return rank + 'th';
-      break;
+      case 1: return rank + 'st';
+      case 2: return rank + 'nd';
+      case 3: return rank + 'rd';
+      default: return rank + 'th';
     }
   },
   "characterToString": (character) => {
@@ -73,9 +55,6 @@ module.exports = {
     time = Number(time);
     if (time < 0) {
       time *= -1;
-    }
-    if (time === 0) {
-      return '0.000';
     }
     if (time < 10) {
       return '0.00' + time;
@@ -107,15 +86,15 @@ module.exports = {
   "characterIcons": (character) => {
     character = Number(character);
     switch (character) {
-      case 0: return '401402235004911616'; break;
-      case 1: return '401402216272887808'; break;
-      case 2: return '401402223357329418'; break;
-      case 3: return '401402248040546315'; break;
-      case 4: return '401388185826885634'; break;
-      case 5: return '401388229653430285'; break;
-      case 6: return '401388247910973442'; break;
-      case 7: return '401388239866429441'; break;
-      default: throw new Error();
+      case 0: return '401402235004911616';
+      case 1: return '401402216272887808';
+      case 2: return '401402223357329418';
+      case 3: return '401402248040546315';
+      case 4: return '401388185826885634';
+      case 5: return '401388229653430285';
+      case 6: return '401388247910973442';
+      case 7: return '401388239866429441';
+      default: throw new Error("Couldn't convert character to icon.");
     }
   },
   "level_thumbnails": {

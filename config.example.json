@@ -1,27 +1,25 @@
 {
+  "discord": {
+    "token": "STRING/TOKEN", // Client token from the discord website in the developers section.
+    "client_id": "STRING/ID", // Bot client ID
+    "channels": { // I honestly don't feel like explaining this one in detail right now.
+      "dustforce": "276106941875355658",
+      "races": "298677601881292800",
+      "tasforce": "202307017581395968",
+      "mapmaking": "275015117236731905",
+      "bot": "871499721850621962",
+      "holding": "533384972283936788",
+      "leaderboard-updates": "204159286966747136",
+      "bot-testing": "928129547784814613"
+    }
+  },
   "twitch": {
     "client_id": "client_id", // Client ID from the twitch website in the developers section.
     "client_secret": "client_secret", // Client secret from the twitch website in the developers section.
-    /**
-     *  Client token if you have one, otherwise put null.
-     *  If you put null, a token will be retrieved and config.json will be updated with the new token.
-     *  If the token has expired or is invalid, this bot will automatically retrieve a new one.
-     *  This bot will check for token validity every 20 minutes, if the token expires in 30 minutes or less a new one will be retrieved.
-     */
-    "client_token": "client_token",
-    /**
-     *  Used to prevent the bot from announcing repeat offense streams that go live that have nothing to do with Dustforce.
-     *  You can ban a stream by typing !twitchban [twitch username] in the mod channel.
-     */
-    "blacklist": {
-      "500521408": {
-        "login": "abdulqadirnaqsh",
-        "display_name": "abdulqadirnaqsh"
-      }
-    }
-  },
-  "discord": {
-    "token": "token" // Client token from the discord website in the developers section.
+    "games": [ // One of these is Dustforce, the other is Dustforce DX on twitch.
+      "1436588895",
+      "29093"
+    ]
   },
   "twitter": {
     "consumer_key": "key",
@@ -29,18 +27,11 @@
     "access_token": "token",
     "access_token_secret": "secret"
   },
-  "channels": {
-    "dustforce": "276106941875355658",
-    "leaderboardUpdates": "204159286966747136",
-    "holding": "533384972283936788",
-    "mapmaking": "275015117236731905",
-    "tasforce": "202307017581395968",
-    "races": "298677601881292800",
-    "modChannel": "571214531309731850",
-    "rules-info": "731908030320607355"
-  },
   "auto_verify" : [
     // Array of Discord User ID's exempt from bot verification.
   ],
-  "last_replay": 8571723
+  "replays": {
+    "newest": -14292415,
+    "last_processed": -14292415
+  }
 }
