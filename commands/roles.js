@@ -9,7 +9,8 @@ let publicRoles = [
   "multiplayer",
   "melee",
   "strive",
-  "randomizer"
+  "randomizer",
+  "outer wilds"
 ];
 
 module.exports = {
