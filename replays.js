@@ -108,7 +108,7 @@ async function processReplay (replay_id) {
   replay.dustbot = { };
   if (replay && replay.validated && replayTools.level_thumbnails[replay.level] && replay.user > -1) { // Check if replay is validated, part of the base game, & not multiplayer.
     if (replay.pb && (replay.rank_all_score < 10 || replay.rank_all_time < 10 || replay.level === 'yottadifficult' || replay.level === 'exec func ruin user')) {
-      let pbHistory = await needle('get', `https://dustkid.com/json/levelstats/${replay.level}/${replay.user}/${encodeURIComponent(replay.username)}`);
+      let pbHistory = await needle('get', `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`);
       pbHistory = JSON.parse(pbHistory.body);
       let firstSS = false;
       if (pbHistory.scorecounts[0].value === 1 && replay.score_completion === 5 && replay.score_finesse === 5) {
@@ -174,7 +174,7 @@ async function processReplay (replay_id) {
         break;
         default: break charblock;
       }
-      let pbHistory = await needle('get', `https://dustkid.com/json/levelstats/${replay.level}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`);
+      let pbHistory = await needle('get', `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`);
       pbHistory = JSON.parse(pbHistory.body);
       let firstSS = false;
       if (pbHistory.scorecounts[0].value === 1 && replay.score_completion === 5 && replay.score_finesse === 5) {
