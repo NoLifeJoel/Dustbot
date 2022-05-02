@@ -3,8 +3,8 @@ const { newStream } = require('./twitch');
 const config = require('./config.json');
 const { getReplay, newReplay } = require('./replays');
 const replayTools = require('./replayTools');
-const Twit = require('twit');
-const twitter = new Twit(config.twitter);
+const { TwitterApi } = require('twitter-api-v2');
+const twitter = new TwitterApi(config.twitter);
 
 let mainChannel;
 let leaderboardUpdatesChannel;
@@ -120,9 +120,7 @@ function createTwitterMessage (replay, type) {
         ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
     }
   }
-  twitter.post('statuses/update', { "status": message }, (err, data, response) => {
-    if (err) {
-      console.error(err);
-    }
-  });
+  twitter.v1.tweet(message).then(data => {
+    //
+  }).catch(e => console.error(e));
 }

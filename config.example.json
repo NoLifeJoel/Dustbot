@@ -22,16 +22,16 @@
     ]
   },
   "twitter": {
-    "consumer_key": "key",
-    "consumer_secret": "secret",
-    "access_token": "token",
-    "access_token_secret": "secret"
+    "appKey": "key",
+    "appSecret": "secret",
+    "accessToken": "token",
+    "accessSecret": "secret"
   },
   "auto_verify" : [
     // Array of Discord User ID's exempt from bot verification.
   ],
   "replays": {
-    "newest": -14292415,
-    "last_processed": -14292415
+    "newest": -14293894,
+    "last_processed": -14293894
   }
 }
