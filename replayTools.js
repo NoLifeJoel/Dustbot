@@ -7,6 +7,7 @@ module.exports = {
       case 'b': return 3;
       case 'c': return 2;
       case 'd': return 1;
+      case 'x': return 0;
       default : throw new Error("Couldn't convert letter to score.");
     }
   },
@@ -18,6 +19,7 @@ module.exports = {
       case 3: return 'B';
       case 2: return 'C';
       case 1: return 'D';
+      case 0: return 'X';
       default: throw new Error("Couldn't convert score to letter.");
     }
   },
@@ -28,6 +30,7 @@ module.exports = {
       case 3: return '<:B_:401764601215057920>';
       case 2: return '<:C_:401764609721106453>';
       case 1: return '<:D_:401764621746176001>';
+      case 0: return 'X';
     }
   },
   "rankToStr": (rank) => {
