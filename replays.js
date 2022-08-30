@@ -1,7 +1,7 @@
 const needle = require('needle');
-const fs = require('fs');
+const fs = require('node:fs');
 const config = require('./config.json');
-const EventEmitter = require('events');
+const EventEmitter = require('node:events');
 const replayEmitter = new EventEmitter();
 const replayTools = require('./replayTools');
 

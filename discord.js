@@ -1,17 +1,15 @@
-const { Client, Collection, Intents } = require('discord.js');
-const { REST } = require('@discordjs/rest');
-const { Routes } = require('discord-api-types/v9');
+const { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } = require('discord.js');
 const { discord: { token, client_id, channels }, auto_verify } = require('./config.json');
-const fs = require('fs');
+const fs = require('node:fs');
 const needle = require('needle');
 const replayTools = require('./replayTools');
 const twitch = require('./twitch');
 
 const client = new Client({
   "intents": [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MEMBERS,
-    Intents.FLAGS.GUILD_MESSAGES
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages
   ]
 });
 
@@ -25,7 +23,7 @@ for (const file of commandFiles) {
   commands.push(command.data.toJSON());
 }
 
-const rest = new REST({ version: '9' }).setToken(token);
+const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
   try {
@@ -42,14 +40,14 @@ client.once('ready', () => {
   client.user.setPresence({
     "status": 'online',
     "activities": [{
-      "type": 'PLAYING',
+      "type": ActivityType.Playing,
       "name": 'Dustforce'
     }]
   });
 });
 
 client.on('interactionCreate', async (interaction) => {
-  if (!interaction.isCommand()) return;
+  if (!interaction.type === InteractionType.ApplicationCommand) return;
   const { commandName: command } = interaction;
   if (!client.commands.has(command)) return;
   if (interaction.channelId !== channels['bot'] && interaction.channelId !== channels['bot-testing']) return;
@@ -178,7 +176,7 @@ client.on('messageCreate', async (message) => {
   }
   if (message.channel.id === channels['holding']) {
     let holdingRole = message.member.guild.roles.cache.find((role) => role.name === 'holding');
-    if (message.content === '!verify' && message.member.roles.cache.has(holdingRole.id)) {
+    if (message.content.toLowerCase() === '!verify' && message.member.roles.cache.has(holdingRole.id)) {
       message.member.roles.remove(holdingRole);
       if (auto_verify.indexOf(message.member.id) === -1) auto_verify.push(message.member.id);
     }
