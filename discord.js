@@ -37,7 +37,7 @@ const rest = new REST({ version: '10' }).setToken(token);
   }
 })();
 
-client.once('ready', () => {
+client.once('ready', function setPlaying () {
   client.user.setPresence({
     "status": 'online',
     "activities": [{
@@ -45,6 +45,7 @@ client.once('ready', () => {
       "name": 'Dustforce'
     }]
   });
+  setTimeout(setPlaying, 5 * 60 * 1000);
 });
 
 client.on('interactionCreate', async (interaction) => {

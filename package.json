@@ -1,6 +1,6 @@
 {
   "name": "Dustbot",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Posts twitch streams to discord, replay data to the discord & twitter.",
   "main": "index.js",
   "scripts": {

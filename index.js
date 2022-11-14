@@ -58,7 +58,7 @@ function createDiscordMessage (replay, type, firstSS, char) {
   let x_way_tie = '';
   let previousTime = '';
   let previousRank = '';
-  if (typeof replay.dustbot[(char === 'char' ? 'char_' : '') + lowercaseType] === 'object') {
+  if (typeof replay.dustbot[(char === 'char' ? 'char_' : '') + lowercaseType] === 'object' && typeof replay.dustbot[(char === 'char' ? 'char_' : '') + lowercaseType].previous_rank === 'number') {
     previousRank = ' _' + replayTools.rankToStr(replay.dustbot[(char === 'char' ? 'char_' : '') + lowercaseType].previous_rank - 1) + '_  ->';
     previousTime = ' _' + replayTools.parseTime(replay.dustbot[(char === 'char' ? 'char_' : '') + lowercaseType].previous_time) + '_  ->';
   }
