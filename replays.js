@@ -307,6 +307,5 @@ async function updateNewestReplay () {
 }
 
 module.exports = {
-  "getReplay": get_replay,
   "newReplay": replayEmitter
 };

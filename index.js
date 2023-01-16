@@ -1,7 +1,7 @@
 const discord = require('./discord');
 const { newStream } = require('./twitch');
 const config = require('./config.json');
-const { getReplay, newReplay } = require('./replays');
+const { newReplay } = require('./replays');
 const replayTools = require('./replayTools');
 const { TwitterApi } = require('twitter-api-v2');
 const twitter = new TwitterApi(config.twitter);
