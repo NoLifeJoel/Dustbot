@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   "letterToScore": (letter) => {
     letter = letter.toLowerCase();
     switch (letter) {

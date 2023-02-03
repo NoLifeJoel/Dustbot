@@ -1,12 +1,12 @@
-const { TwitterApi } = require('twitter-api-v2');
+import { TwitterApi } from 'twitter-api-v2';
 
-const replayTools = require('../replays/util.js');
+import replayTools from '../replays/util.js';
 
-const config = require('../../config.json.js');
+import config from '../../config.json.js';
 
 const twitter = new TwitterApi(config.twitter);
 
-function createTwitterMessage (replay, type) {
+export function createTwitterMessage (replay, type) {
   let previous_second = replay.dustbot[type.toLowerCase()].previous_wr;
   let improvedBy = Number(previous_second["time"]) - Number(replay["time"]);
   let message = '';
@@ -35,8 +35,4 @@ function createTwitterMessage (replay, type) {
   }
 
   twitter.v1.tweet(message).catch(e => console.error(e));
-}
-
-module.exports = {
-  createTwitterMessage,
 }

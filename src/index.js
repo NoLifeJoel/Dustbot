@@ -1,12 +1,13 @@
-const discord = require('./discord.js');
-const { newStream } = require('./twitch.js');
+import discord from './discord.js';
 
-const { newReplay } = require('./replays/index.js');
-const replayTools = require('./replays/util.js');
+import { newReplay } from './replays/index.js';
+import replayTools from './replays/util.js';
 
-const { createTwitterMessage } = require('./twitter/index.js');
+import { newStream } from './twitch/index.js';
 
-const config = require('../config.json');
+import { createTwitterMessage } from './twitter/index.js';
+
+import config from '../config.json';
 
 let mainChannel;
 let leaderboardUpdatesChannel;

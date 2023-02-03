@@ -1,12 +1,14 @@
-const fs = require('node:fs');
-const needle = require('needle');
+import fs from 'fs';
+import needle from 'needle';
 
-const { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } = require('discord.js');
+import { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } from 'discord.js';
 
-const replayTools = require('./replays/util.js');
-const twitch = require('./twitch.js');
+import replayTools from './replays/util.js';
+import twitch from './twitch/index.js';
 
-const { discord: { token, client_id, channels }, auto_verify } = require('../config.json');
+import config from '../config.json';
+
+const { discord: { token, client_id, channels }, auto_verify } = config;
 
 const client = new Client({
   "intents": [
@@ -104,10 +106,9 @@ client.on('messageCreate', async (message) => {
   if ([channels['dustforce'],channels['races'],channels['tasforce'],channels['mapmaking']].indexOf(message.channel.id) > -1) {
     let noThumbnailRegex = /^(\.|!)(nt)$/i;
     replayblock: if (message.content.indexOf('dustkid.com/replay/') !== -1 && !noThumbnailRegex.test(message.content.split(/ |\n/)[0])) {
-      let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(/ |\n/)[0].replace(/[^0-9\-]/g, ''));
+      let replay_id = Number(message.content.split('dustkid.com/replay/')[1].split(/ |\n/)[0].replace(/[^0-9-]/g, ''));
       if (typeof replay_id === 'number' && !isNaN(replay_id)) {
         message.channel.sendTyping();
-        let responseCounter = 0;
         let replay;
         try {
           replay = await needle('get', `https://dustkid.com/replayviewer.php?replay_id=${replay_id}&json=true&metaonly=true`);
@@ -236,4 +237,4 @@ client.on('guildMemberAdd', async (member) => {
 
 client.login(token);
 
-module.exports = client;
+export default client;

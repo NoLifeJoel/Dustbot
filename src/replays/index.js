@@ -1,12 +1,12 @@
-const needle = require('needle');
-const fs = require('node:fs');
-const EventEmitter = require('node:events');
+import needle from 'needle';
+import fs from 'fs';
+import EventEmitter from 'events';
 
-const replayTools = require('./util.js');
+import replayTools from './util.js';
 
-const config = require('../../config.json');
+import config from '../../config.json';
 
-const replayEmitter = new EventEmitter();
+export const replayEmitter = new EventEmitter();
 
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -308,7 +308,3 @@ async function updateNewestReplay () {
     break;
   }
 }
-
-module.exports = {
-  "newReplay": replayEmitter
-};

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+import { SlashCommandBuilder } from 'discord.js';
 
 let publicRoles = [
   // dustforce-related
@@ -16,8 +16,8 @@ let publicRoles = [
   "strive",
 ];
 
-module.exports = {
-  "data": new SlashCommandBuilder()
+export default {
+  data: new SlashCommandBuilder()
     .setName('roles')
     .setDescription('Add or remove roles made for everybody in the server.')
     .addRoleOption(option =>
