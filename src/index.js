@@ -80,11 +80,13 @@ discord.once("ready", () => {
             createDiscordMessage(replay, "Score", false, "char");
           }
           break;
+
         case "char_time":
           if ((typeof replay.dustbot["time"] === "undefined" || replay.dustbot.time.WR === false) && value.WR && replay.rank_char_time_ties === 0) {
             createDiscordMessage(replay, "Time", false, "char");
           }
           break;
+
         case "score":
           if (value.top10) {
             createDiscordMessage(replay, "Score", false, "all");
@@ -96,6 +98,7 @@ discord.once("ready", () => {
             createTwitterMessage(replay, "Score");
           }
           break;
+
         case "time":
           if (value.top10) {
             createDiscordMessage(replay, "Time", false, "all");
