@@ -1,10 +1,10 @@
-import needle from "needle";
-import fs from "fs";
-import EventEmitter from "events";
+const needle = require("needle");
+const fs = require("fs");
+const EventEmitter = require("events");
 
-import replayTools from "./util.js";
+const replayTools = require("./util.js");
 
-import config from "../../config.json";
+const config = require("../../config.json");
 
 export const replayEmitter = new EventEmitter();
 
@@ -202,7 +202,7 @@ const processReplay = async (replayId) => {
 
       let replayBoard = "score";
       while (replayBoard !== "done") {
-        if (pbHistory[replayBoard + "s"][0].timestamp === replay.timestamp) {
+        if (pbHistory[`${replayBoard}s`][0].timestamp === replay.timestamp) {
           if (typeof replay.dustbot[replayBoard] === "undefined") {
             replay.dustbot[replayBoard] = {
               "top10": false,
@@ -214,15 +214,15 @@ const processReplay = async (replayId) => {
             }
           }
 
-          if (replay["rank_all_" + replayBoard] < 10) {
+          if (replay[`rank_all_${replayBoard}`] < 10) {
             replay.dustbot[replayBoard].top10 = true;
           }
 
-          if (replay["rank_all_" + replayBoard] === 0) {
+          if (replay[`rank_all_${replayBoard}`] === 0) {
             let wrHistory = await needle("get", `https://dustkid.com/json/levelhistory/${encodeURIComponent(replay.level)}/all`);
             wrHistory = JSON.parse(wrHistory.body);
 
-            if (replay["rank_all_" + replayBoard + "_ties"] === 0) {
+            if (replay[`rank_all_${replayBoard}_ties`] === 0) {
               replay.dustbot[replayBoard].previous_wr = wrHistory.wrs[(replayBoard === "score" ? 0 : 16)][(wrHistory.wrs[replayBoard === "score" ? 0 : 16].length - 2)];
               let previousName = await needle("get", `https://dustkid.com/json/profile/${replay.dustbot[replayBoard].previous_wr.user}/all`);
               previousName = Object.values(Object.values(JSON.parse(previousName.body))[0])[0].username;
@@ -232,10 +232,10 @@ const processReplay = async (replayId) => {
             replay.dustbot[replayBoard].WR = true;
           }
 
-          if (pbHistory[replayBoard + "s"][1]) {
-            replay.dustbot[replayBoard]["previous_rank"] = pbHistory[replayBoard + "s"][1].rank;
-            replay.dustbot[replayBoard]["previous_time"] = pbHistory[replayBoard + "s"][1].time;
-            replay.dustbot[replayBoard]["previous_timestamp"] = pbHistory[replayBoard + "s"][1].timestamp;
+          if (pbHistory[`${replayBoard}s`][1]) {
+            replay.dustbot[replayBoard]["previous_rank"] = pbHistory[`${replayBoard}s`][1].rank;
+            replay.dustbot[replayBoard]["previous_time"] = pbHistory[`${replayBoard}s`][1].time;
+            replay.dustbot[replayBoard]["previous_timestamp"] = pbHistory[`${replayBoard}s`][1].timestamp;
           }
         }
 
@@ -280,9 +280,9 @@ const processReplay = async (replayId) => {
 
       let replayBoard = "score";
       while (replayBoard !== "done") {
-        if (pbHistory[replayBoard + "s"][0].timestamp === replay.timestamp) {
-          if (typeof replay.dustbot["char_" + replayBoard] === "undefined") {
-            replay.dustbot["char_" + replayBoard] = {
+        if (pbHistory[`${replayBoard}s`][0].timestamp === replay.timestamp) {
+          if (typeof replay.dustbot[`char_${replayBoard}`] === "undefined") {
+            replay.dustbot[`char_${replayBoard}`] = {
               "top10": false,
               "WR": false,
             };
@@ -300,7 +300,7 @@ const processReplay = async (replayId) => {
             replay.dustbot[`char_${replayBoard}`].WR = true;
           }
 
-          if (pbHistory[replayBoard + "s"][1]) {
+          if (pbHistory[`${replayBoard}s`][1]) {
             replay.dustbot[`char_${replayBoard}`]["previous_rank"] = pbHistory[`${replayBoard}s`][1].rank;
             replay.dustbot[`char_${replayBoard}`]["previous_time"] = pbHistory[`${replayBoard}s`][1].time;
             replay.dustbot[`char_${replayBoard}`]["previous_timestamp"] = pbHistory[`${replayBoard}s`][1].timestamp;
@@ -322,7 +322,7 @@ const processReplay = async (replayId) => {
 
   replayEmitter.emit("replay", replay);
 
-  config.replays.last_processed = replayId;
+  config.replays.lastProcessed = replayId;
   fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
 
   return replay;
@@ -335,19 +335,19 @@ const processReplay = async (replayId) => {
     await sleep(2 * 1000);
 
     try {
-      await processReplay(config.replays.last_processed - 1);
+      await processReplay(config.replays.lastProcessed - 1);
     }
     catch (error) {
       if (error.message === "Replay not found.") {
-        config.replays.last_processed--;
+        config.replays.lastProcessed--;
       }
       else {
         await sleep(10 * 1000);
-        if (error.code !== "ECONNRESET" && error.message !== "query timed out." && error.message !== "query timed out") {
+        if (error.code !== "ECONNRESET" && error.message !== "query timed out.") {
           console.error(error);
         }
 
-        if (error.message === "query timed out." || error.message === "query timed out") {
+        if (error.message === "query timed out.") {
           await sleep(10 * 1000);
         }
       }

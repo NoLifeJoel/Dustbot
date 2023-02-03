@@ -1,14 +1,14 @@
-import fs from "fs";
-import needle from "needle";
+const fs = require("fs");
+const needle = require("needle");
 
-import { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } from "discord.js";
+const { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } = require("discord.js");
 
-import replayTools from "./replays/util.js";
-import twitch from "./twitch/index.js";
+const replayTools = require("./replays/util.js");
+const twitch = require("./twitch/index.js");
 
-import config from "../config.json";
+const config = require("../config.json");
 
-const { discord: { token, client_id: clientId, channels }, auto_verify: autoVerify } = config;
+const { discord: { token, clientId, channels }, autoVerify } = config;
 
 const client = new Client({
   "intents": [
@@ -299,4 +299,4 @@ client.on("guildMemberAdd", async (member) => {
 
 client.login(token);
 
-export default client;
+module.exports = client;

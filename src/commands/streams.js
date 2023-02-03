@@ -1,8 +1,8 @@
-import { SlashCommandBuilder } from "discord.js";
+const { SlashCommandBuilder } = require("discord.js");
 
-import { getStreams } from "../twitch/index.js";
+const { getStreams } = require("../twitch/index.js");
 
-export default {
+module.exports = {
   data: new SlashCommandBuilder()
     .setName("streams")
     .setDescription("Fetches Dustforce streams from twitch."),

@@ -13,25 +13,27 @@
       "bot-testing": "928129547784814613"
     }
   },
+
   "twitch": {
-    "client_id": "client_id", // Client ID from the twitch website in the developers section.
-    "client_secret": "client_secret", // Client secret from the twitch website in the developers section.
+    "clientId": "client_id", // Client ID from the twitch website in the developers section.
+    "clientSecret": "client_secret", // Client secret from the twitch website in the developers section.
     "games": [ // One of these is Dustforce, the other is Dustforce DX.
       "1436588895",
       "29093"
     ]
   },
+  "autoVerify" : [
+    // Array of Discord User ID's exempt from bot verification.
+  ],
+  "replays": {
+    "newest": -14602771,
+    "lastProcessed": -14602771
+  },
+
   "twitter": {
     "appKey": "key",
     "appSecret": "secret",
     "accessToken": "token",
     "accessSecret": "secret"
-  },
-  "auto_verify" : [
-    // Array of Discord User ID's exempt from bot verification.
-  ],
-  "replays": {
-    "newest": -14602771,
-    "last_processed": -14602771
   }
 }

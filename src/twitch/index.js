@@ -1,9 +1,9 @@
-import EventEmitter from "events";
+const EventEmitter = require("events");
 
-import { ApiClient } from "@twurple/api";
-import { ClientCredentialsAuthProvider } from "@twurple/auth";
+const { ApiClient } = require("@twurple/api");
+const { ClientCredentialsAuthProvider } = require("@twurple/auth");
 
-import config from "../../config.json";
+const config = require("../../config.json");
 
 const { twitch: { clientId, clientSecret, games } } = config;
 
@@ -63,7 +63,7 @@ const loop = async (firstCall = true) => {
 
 setTimeout(loop, 10 * 1000);
 
-export default {
+module.exports = {
   "newStream": streamEmitter,
   "getStreams": () => {
     return streams;

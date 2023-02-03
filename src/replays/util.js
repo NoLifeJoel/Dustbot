@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   "letterToScore": (letter) => {
     letter = letter.toLowerCase();
     switch (letter) {
@@ -83,9 +83,9 @@ export default {
       else {
         seconds = seconds.toString();
       }
-      return minutes.toString() + ":" + seconds + "." + milliseconds;
+      return `${minutes.toString()}:${seconds}.${milliseconds}`;
     }
-    return seconds.toString() + "." + milliseconds;
+    return `${seconds.toString()}.${milliseconds}`;
   },
   "characterIcons": (character) => {
     character = Number(character);

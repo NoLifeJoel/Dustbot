@@ -1,13 +1,13 @@
-import client from "./discord.js";
+const client = require("./discord.js");
 
-import { newReplay } from "./replays/index.js";
-import replayTools from "./replays/util.js";
+const { newReplay } = require("./replays/index.js");
+const replayTools = require("./replays/util.js");
 
-import { newStream } from "./twitch/index.js";
+const { newStream } = require("./twitch/index.js");
 
-import { createTwitterMessage } from "./twitter/index.js";
+const { createTwitterMessage } = require("./twitter/index.js");
 
-import config from "../config.json";
+const config = require("../config.json");
 
 let mainChannel;
 let leaderboardUpdatesChannel;
