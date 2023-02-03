@@ -1,9 +1,12 @@
-const { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } = require('discord.js');
-const { discord: { token, client_id, channels }, auto_verify } = require('./config.json');
 const fs = require('node:fs');
 const needle = require('needle');
-const replayTools = require('./replayTools');
-const twitch = require('./twitch');
+
+const { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } = require('discord.js');
+
+const replayTools = require('./replays/util.js');
+const twitch = require('./twitch.js');
+
+const { discord: { token, client_id, channels }, auto_verify } = require('../config.json');
 
 const client = new Client({
   "intents": [

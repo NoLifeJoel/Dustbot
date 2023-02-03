@@ -1,10 +1,12 @@
-const discord = require('./discord');
-const { newStream } = require('./twitch');
-const config = require('./config.json');
-const { newReplay } = require('./replays');
-const replayTools = require('./replayTools');
-const { TwitterApi } = require('twitter-api-v2');
-const twitter = new TwitterApi(config.twitter);
+const discord = require('./discord.js');
+const { newStream } = require('./twitch.js');
+
+const { newReplay } = require('./replays/index.js');
+const replayTools = require('./replays/util.js');
+
+const { createTwitterMessage } = require('./twitter/index.js');
+
+const config = require('../config.json');
 
 let mainChannel;
 let leaderboardUpdatesChannel;
@@ -12,7 +14,7 @@ let leaderboardUpdatesChannel;
 discord.once('ready', () => {
   leaderboardUpdatesChannel = discord.channels.cache.get(config.discord.channels['leaderboard-updates']);
   mainChannel = discord.channels.cache.get(config.discord.channels['dustforce']);
-  
+
   newStream.on('stream', (stream) => {
     mainChannel.sendTyping();
     mainChannel.send('<' + stream.url + '> just went live: ' + stream.title).then((message) => {
@@ -93,34 +95,3 @@ function createDiscordMessage (replay, type, firstSS, char) {
   });
 }
 
-function createTwitterMessage (replay, type) {
-  let previous_second = replay.dustbot[type.toLowerCase()].previous_wr;
-  let improvedBy = Number(previous_second["time"]) - Number(replay["time"]);
-  let message = '';
-  let date = new Date(Number(replay.timestamp) * 1000);
-  date = date.toDateString();
-  if (previous_second.user === replay.user) {
-    if (Number(replay["time"]) < Number(previous_second["time"])) {
-      message = replay.username + ' improved ' + replay.levelname + ' (' + type + ') by ' + replayTools.parseTime(improvedBy) +
-        ' seconds with a time of ' + replayTools.parseTime(replay.time) + ', score ' + replayTools.scoreToLetter(replay.score_completion) + replayTools.scoreToLetter(replay.score_finesse) +
-        ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
-    } else {
-      message = replay.username + ' improved ' + replay.levelname + ' (' + type + ') by getting a higher score with a time of ' + replayTools.parseTime(replay.time) +
-        ', score ' + replayTools.scoreToLetter(replay.score_completion) + replayTools.scoreToLetter(replay.score_finesse) + 
-        ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
-    }
-  } else {
-    if (Number(replay["time"]) < Number(previous_second["time"])) {
-      message = replay.username + ' beat ' + previous_second.username + ' on ' + replay.levelname + ' (' + type + ') by ' + replayTools.parseTime(improvedBy) + ' seconds with a time of ' +
-        replayTools.parseTime(replay.time) + ', score ' + replayTools.scoreToLetter(replay.score_completion) + replayTools.scoreToLetter(replay.score_finesse) +
-        ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
-    } else {
-      message = replay.username + ' beat ' + previous_second.username + ' on ' + replay.levelname + ' (' + type + ') by getting a higher score with a time of ' + replayTools.parseTime(replay.time) + ', score ' + 
-        replayTools.scoreToLetter(replay.score_completion) + replayTools.scoreToLetter(replay.score_finesse) +
-        ' as ' + replayTools.characterToString(replay.character) + ' / ' + date + ' #Dustforce';
-    }
-  }
-  twitter.v1.tweet(message).then(data => {
-    //
-  }).catch(e => console.error(e));
-}

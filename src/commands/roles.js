@@ -1,16 +1,19 @@
 const { SlashCommandBuilder } = require('discord.js');
 
 let publicRoles = [
-  "amongus",
-  "mapmakers",
-  "racers",
+  // dustforce-related
   "bingo",
-  "weekinreview",
+  "mapmakers",
   "multiplayer",
-  "melee",
-  "strive",
+  "racers",
   "randomizer",
-  "outer wilds"
+  "weekinreview",
+
+  // miscellaneous
+  "amongus",
+  "melee",
+  "outer wilds",
+  "strive",
 ];
 
 module.exports = {

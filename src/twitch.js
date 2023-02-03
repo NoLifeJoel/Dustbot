@@ -1,9 +1,11 @@
+const EventEmitter = require('node:events');
 const { ApiClient } = require('@twurple/api');
 const { ClientCredentialsAuthProvider } = require('@twurple/auth');
-const { twitch: { clientId, clientSecret, games } } = require('./config.json');
-const EventEmitter = require('node:events');
+
+const { twitch: { clientId, clientSecret, games } } = require('../config.json');
+
 const streamEmitter = new EventEmitter();
-const streams = [ ];
+const streams = [];
 
 const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 

@@ -1,18 +1,21 @@
 const needle = require('needle');
 const fs = require('node:fs');
-const config = require('./config.json');
 const EventEmitter = require('node:events');
+
+const replayTools = require('./util.js');
+
+const config = require('../../config.json');
+
 const replayEmitter = new EventEmitter();
-const replayTools = require('./replayTools');
 
 function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
- * 
+ *
  * Contents of "let replay = JSON.parse(res.body);":
- * 
+ *
  * @rid [Number] Internal dustkid.com replay ID, if incremented by 1 then made negative can be used to query for the replay in the Dustkid API.
  * @user [Number] User ID of the user that uploaded the replay.
  * @level [String] Level name, can be used to query for the level.
@@ -56,7 +59,7 @@ function sleep (ms) {
  * @rank_all_time_ties [Number] Amount of players tied for @rank_all_time
  * @rank_char_score_ties [Number] Amount of players tied for @rank_char_score
  * @rank_char_time_ties [Number] Amount of players tied for @rank_char_time
- * 
+ *
  */
 
 async function get_replay (replay_id) {
@@ -68,7 +71,7 @@ async function get_replay (replay_id) {
 }
 
 /**
- * 
+ *
  * Contents of "let pbHistory = JSON.parse(res.body);":
  * @charcounts [Array] Objects containing the following values below.
  *    @value [Number] Amount of times the user has PB'd the level with this character
@@ -93,7 +96,7 @@ async function get_replay (replay_id) {
  *      @t [Number] Unknown use.
  *    @type [String] Appears to always say "scatter"
  *    @name [String] Specifies whether the containing object is "Times PBs" or "Scores PBs"
- * 
+ *
  */
 
 async function processReplay (replay_id) {
@@ -246,7 +249,7 @@ async function processReplay (replay_id) {
 })();
 
 /**
- * 
+ *
  * This is what sortHistory returns after feeding it pbHistory. It's ordered by rank, from smallest to biggest.
  * @replays [Object]
  *    @scores [Array]->[Object]
