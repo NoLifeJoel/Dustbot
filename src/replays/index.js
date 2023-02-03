@@ -102,10 +102,13 @@ const sortHistory = (pbHistory) => {
             "time": Math.round(pbHistory.pbtimes[timesRanks].y[data] * 1000),
             "rank": pbHistory.pbranks[timesRanks].y[data],
           };
+
           replays.scores[data] = replay;
         }
+
         replays.scores.reverse();
       }
+
       if (pbHistory.pbtimes[timesRanks].name === "Times PBs") {
         replays.times = new Array(dataIterations);
         for (let data = 0; data < dataIterations; data++) {
@@ -114,8 +117,10 @@ const sortHistory = (pbHistory) => {
             "time": Math.round(pbHistory.pbtimes[timesRanks].y[data] * 1000),
             "rank": pbHistory.pbranks[timesRanks].y[data],
           };
+
           replays.times[data] = replay;
         }
+
         replays.times.reverse();
       }
     }
@@ -203,24 +208,30 @@ const processReplay = async (replayId) => {
               "top10": false,
               "WR": false,
             };
+
             if (replayBoard === "score") {
               replay.dustbot[replayBoard].firstSS = firstSS;
             }
           }
+
           if (replay["rank_all_" + replayBoard] < 10) {
             replay.dustbot[replayBoard].top10 = true;
           }
+
           if (replay["rank_all_" + replayBoard] === 0) {
             let wrHistory = await needle("get", `https://dustkid.com/json/levelhistory/${encodeURIComponent(replay.level)}/all`);
             wrHistory = JSON.parse(wrHistory.body);
+
             if (replay["rank_all_" + replayBoard + "_ties"] === 0) {
               replay.dustbot[replayBoard].previous_wr = wrHistory.wrs[(replayBoard === "score" ? 0 : 16)][(wrHistory.wrs[replayBoard === "score" ? 0 : 16].length - 2)];
               let previousName = await needle("get", `https://dustkid.com/json/profile/${replay.dustbot[replayBoard].previous_wr.user}/all`);
               previousName = Object.values(Object.values(JSON.parse(previousName.body))[0])[0].username;
               replay.dustbot[replayBoard].previous_wr.username = previousName;
             }
+
             replay.dustbot[replayBoard].WR = true;
           }
+
           if (pbHistory[replayBoard + "s"][1]) {
             replay.dustbot[replayBoard]["previous_rank"] = pbHistory[replayBoard + "s"][1].rank;
             replay.dustbot[replayBoard]["previous_time"] = pbHistory[replayBoard + "s"][1].time;
@@ -255,8 +266,10 @@ const processReplay = async (replayId) => {
         case 3:
           character = "worth";
           break;
-        default: break charblock;
+        default:
+          break charblock;
       }
+
       let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`);
       pbHistory = JSON.parse(pbHistory.body);
       let firstSS = false;
@@ -264,6 +277,7 @@ const processReplay = async (replayId) => {
         firstSS = true;
       }
       pbHistory = sortHistory(pbHistory);
+
       let replayBoard = "score";
       while (replayBoard !== "done") {
         if (pbHistory[replayBoard + "s"][0].timestamp === replay.timestamp) {
@@ -273,19 +287,23 @@ const processReplay = async (replayId) => {
               "WR": false,
             };
           }
+
           if (replayBoard === "score") {
-            replay.dustbot["char_" + replayBoard].firstSS = firstSS;
+            replay.dustbot[`char_${replayBoard}`].firstSS = firstSS;
           }
-          if (replay["rank_char_" + replayBoard] < 10) {
-            replay.dustbot["char_" + replayBoard].top10 = true;
+
+          if (replay[`rank_char_${replayBoard}`] < 10) {
+            replay.dustbot[`char_${replayBoard}`].top10 = true;
           }
-          if (replay["rank_char_" + replayBoard] === 0) {
-            replay.dustbot["char_" + replayBoard].WR = true;
+
+          if (replay[`rank_char_${replayBoard}`] === 0) {
+            replay.dustbot[`char_${replayBoard}`].WR = true;
           }
+
           if (pbHistory[replayBoard + "s"][1]) {
-            replay.dustbot["char_" + replayBoard]["previous_rank"] = pbHistory[replayBoard + "s"][1].rank;
-            replay.dustbot["char_" + replayBoard]["previous_time"] = pbHistory[replayBoard + "s"][1].time;
-            replay.dustbot["char_" + replayBoard]["previous_timestamp"] = pbHistory[replayBoard + "s"][1].timestamp;
+            replay.dustbot[`char_${replayBoard}`]["previous_rank"] = pbHistory[`${replayBoard}s`][1].rank;
+            replay.dustbot[`char_${replayBoard}`]["previous_time"] = pbHistory[`${replayBoard}s`][1].time;
+            replay.dustbot[`char_${replayBoard}`]["previous_timestamp"] = pbHistory[`${replayBoard}s`][1].timestamp;
           }
         }
 
@@ -293,6 +311,7 @@ const processReplay = async (replayId) => {
           case "score":
             replayBoard = "time";
             break;
+
           default:
             replayBoard = "done";
             break;
@@ -327,6 +346,7 @@ const processReplay = async (replayId) => {
         if (error.code !== "ECONNRESET" && error.message !== "query timed out." && error.message !== "query timed out") {
           console.error(error);
         }
+
         if (error.message === "query timed out." || error.message === "query timed out") {
           await sleep(10 * 1000);
         }

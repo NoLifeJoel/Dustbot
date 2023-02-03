@@ -6,6 +6,7 @@ export default {
   data: new SlashCommandBuilder()
     .setName("streams")
     .setDescription("Fetches Dustforce streams from twitch."),
+
   async execute(interaction) {
     const streams = getStreams();
     if (streams.length === 0) {
