@@ -121,7 +121,7 @@ const strimCommandRegex = /^(\.|!)(st(r|w)ims)$/i;
 const streamNotCased = /^(\.|!)(st(r|w)(ea|i)ms)$/;
 const noThumbnailRegex = /^(\.|!)(nt)$/i;
 client.on("messageCreate", async (message) => {
-  if ([channels["dustforce"], channels["races"], channels["tasforce"], channels["mapmaking"]].indexOf(message.channel.id) > -1) {
+  if ([channels["dustforce"], channels["races"], channels["tasforce"], channels["mapmaking"]].includes(message.channel.id)) {
     replayblock: if (message.content.indexOf("dustkid.com/replay/") !== -1 && !noThumbnailRegex.test(message.content.split(/ |\n/)[0])) {
       const replayId = Number(message.content.split("dustkid.com/replay/")[1].split(/ |\n/)[0].replace(/[^0-9-]/g, ""));
       if (typeof replayId === "number" && !isNaN(replayId)) {
@@ -155,8 +155,8 @@ client.on("messageCreate", async (message) => {
           }
         }
 
-        const usernameWrapper = "**[" + replay.username + "](https://dustkid.com/profile/" + replay.user + "/)**";
-        const camera = "[<:camera:401772771908255755>](https://dustkid.com/replay/" + replay.replay_id + ")";
+        const usernameWrapper = `**[${replay.username}](https://dustkid.com/profile/${replay.user}/)**`;
+        const camera = `[<:camera:401772771908255755>](https://dustkid.com/replay/${replay.replay_id})`;
         let ranks = "";
         let tas = "";
         if (replay.validated === -1 && replay.tag.mode === "dbg_0") {
@@ -171,13 +171,15 @@ client.on("messageCreate", async (message) => {
           let timeTies = "";
           let scoreTies = "";
           if (replay.rank_all_score_ties > 0) {
-            scoreTies = " (" + (replay.rank_all_score_ties + 1) + "-way tie)";
+            scoreTies = ` (${(replay.rank_all_score_ties + 1)}-way tie)`;
           }
+
           if (replay.rank_all_time_ties > 0) {
-            timeTies = " (" + (replay.rank_all_time_ties + 1) + "-way tie)";
+            timeTies = ` (${(replay.rank_all_time_ties + 1)}-way tie)`;
           }
-          ranks = "Score Rank: " + replayTools.rankToStr(replay.rank_all_score + 1) + scoreTies + "\n" +
-                  "Time Rank: "  + replayTools.rankToStr(replay.rank_all_time  + 1) + timeTies  + "\n";
+
+          ranks = `Score Rank: ${replayTools.rankToStr(replay.rank_all_score + 1)}${scoreTies}\n`
+          + `Time Rank: ${replayTools.rankToStr(replay.rank_all_time + 1)}${timeTies}\n`;
         }
 
         if (replay.level === "unknown" && replay.levelname === "unknown" && replay.dustkid === 1 && replay.replay_id < 0 && replay.rank_all_time === false && replay.rank_all_time === false) {
@@ -196,13 +198,13 @@ client.on("messageCreate", async (message) => {
         const replayMessage = {
           "author": {
             "name": replay.levelname,
-            "url": "https://dustkid.com/level/" + encodeURIComponent(replay.level),
-            "icon_url": "https://cdn.discordapp.com/emojis/" + replayTools.characterIcons(replay.character) + ".png",
+            "url": `https://dustkid.com/level/${encodeURIComponent(replay.level)}`,
+            "icon_url": `https://cdn.discordapp.com/emojis/${replayTools.characterIcons(replay.character)}.png`,
           },
-          "description": camera + " " + usernameWrapper + tas + "\n" +
-            "Score: " + replayTools.scoreToIcon(replay.score_completion) + replayTools.scoreToIcon(replay.score_finesse) + "\n" +
-            "Time: " + replayTools.parseTime(replay.time) + "\n" + ranks +
-            "<:apple:230164613424087041> " + replay.apples + tags,
+          "description": `${camera} ${usernameWrapper}${tas}\n`
+            + `Score: ${replayTools.scoreToIcon(replay.score_completion)}${replayTools.scoreToIcon(replay.score_finesse)}\n`
+            + `Time: ${replayTools.parseTime(replay.time)}\n`
+            + `${ranks}<:apple:230164613424087041> ${replay.apples}${tags}`,
           "footer": {
             "text": "Date",
           },
@@ -262,7 +264,7 @@ client.on("messageCreate", async (message) => {
             streamTitle = toWeirdCase(message.content, streamTitle);
           }
           streamTitle = streamTitle.replace(/\\(\*|@|<|>|:|_|`|~|\\)/g, "$1").replace(/(\*|@|<|>|:|_|`|~|\\)/g, "\\$1");
-          streamsString += "<" + stream["url"] + "> - " + streamTitle + "\n";
+          streamsString += `<${stream["url"]}> - ${streamTitle}\n`;
         }
 
         if (streamsString === "") {
@@ -292,7 +294,7 @@ client.on("guildMemberAdd", async (member) => {
     if (autoVerify.indexOf(member.id) === -1) {
       const holdingChannel = member.guild.channels.cache.get(channels["holding"]);
       member.roles.add(holdingRole);
-      holdingChannel.send("<@" + member.id + "> type !verify to see the other channels. This is an anti-bot measure.");
+      holdingChannel.send(`<@${member.id}> type !verify to see the other channels. This is an anti-bot measure.`);
     }
   }
 });

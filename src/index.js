@@ -15,16 +15,16 @@ let leaderboardUpdatesChannel;
 const createDiscordMessage = (replay, type, firstSS, char) => {
   const lowercaseType = type.toLowerCase();
   const colors = [8493779, 12147535, 11829461, 9874791];
-  const camera = "[<:camera:401772771908255755>](https://dustkid.com/replay/" + replay.replay_id + ")";
+  const camera = `[<:camera:401772771908255755>](https://dustkid.com/replay/${replay.replay_id})`;
   const characterIcons = ["401402235004911616", "401402216272887808", "401402223357329418", "401402248040546315"];
-  const usernameWrapper = "**[" + replay.username + "](https://dustkid.com/profile/" + replay.user + "/)**";
+  const usernameWrapper = `**[${replay.username}](https://dustkid.com/profile/${replay.user}/)**`;
   const spacing = "\n       ";
   let xWayTie = "";
   let previousTime = "";
   let previousRank = "";
   if (typeof replay.dustbot[(char === "char" ? "char_" : "") + lowercaseType] === "object" && typeof replay.dustbot[(char === "char" ? "char_" : "") + lowercaseType].previous_rank === "number") {
-    previousRank = " _" + replayTools.rankToStr(replay.dustbot[(char === "char" ? "char_" : "") + lowercaseType].previous_rank - 1) + "_  ->";
-    previousTime = " _" + replayTools.parseTime(replay.dustbot[(char === "char" ? "char_" : "") + lowercaseType].previous_time) + "_  ->";
+    previousRank = ` _${replayTools.rankToStr(replay.dustbot[(char === "char" ? "char_" : "") + lowercaseType].previous_rank - 1)}_  ->`;
+    previousTime = ` _${replayTools.parseTime(replay.dustbot[(char === "char" ? "char_" : "") + lowercaseType].previous_time)}_  ->`;
   }
 
   if (replay["rank_" + char + "_" + lowercaseType + "_ties"] !== 0) {
