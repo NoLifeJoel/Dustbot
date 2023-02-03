@@ -30,6 +30,7 @@ const loop = async (firstCall = true) => {
       console.error(error);
     }
   }
+
   if (results !== null) {
     for (const stream of results) {
       const streamExists = streams.findIndex(streamCache => streamCache.userName === stream.userName);

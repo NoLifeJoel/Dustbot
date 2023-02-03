@@ -1,4 +1,4 @@
-import discord from "./discord.js";
+import client from "./discord.js";
 
 import { newReplay } from "./replays/index.js";
 import replayTools from "./replays/util.js";
@@ -60,9 +60,9 @@ const createDiscordMessage = (replay, type, firstSS, char) => {
   });
 };
 
-discord.once("ready", () => {
-  leaderboardUpdatesChannel = discord.channels.cache.get(config.discord.channels["leaderboard-updates"]);
-  mainChannel = discord.channels.cache.get(config.discord.channels["dustforce"]);
+client.once("ready", () => {
+  leaderboardUpdatesChannel = client.channels.cache.get(config.discord.channels["leaderboard-updates"]);
+  mainChannel = client.channels.cache.get(config.discord.channels["dustforce"]);
 
   newStream.on("stream", (stream) => {
     mainChannel.sendTyping();
