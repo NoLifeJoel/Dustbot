@@ -1,9 +1,9 @@
-import EventEmitter from 'events';
+import EventEmitter from "events";
 
-import { ApiClient } from '@twurple/api';
-import { ClientCredentialsAuthProvider } from '@twurple/auth';
+import { ApiClient } from "@twurple/api";
+import { ClientCredentialsAuthProvider } from "@twurple/auth";
 
-import config from '../../config.json';
+import config from "../../config.json";
 
 const { twitch: { clientId, clientSecret, games } } = config;
 
@@ -14,46 +14,57 @@ const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 
 const apiClient = new ApiClient({ authProvider });
 
-function sleep (ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function loop (firstCall=true) {
+const reset = 3 * 60 * 1000;
+const loopDelay = 45 * 1000;
+
+const loop = async (firstCall = true) => {
   let results = null;
-  let reset = 3 * 60000; // 3 minutes
-  let loopDelay = 45 * 1000; // 45 seconds
   try {
-    let response = await apiClient.streams.getStreams({ "game": games });
+    const response = await apiClient.streams.getStreams({ "game": games });
     results = response.data;
-  } catch (e) {
-    if (e.code !== "ETIMEDOUT") console.error(e); // Twitch API is slow sometimes.
+  }
+  catch (error) {
+    if (error.code !== "ETIMEDOUT") {
+      console.error(error);
+    }
   }
   if (results !== null) {
-    for (let stream of results) {
+    for (const stream of results) {
       const streamExists = streams.findIndex(streamCache => streamCache.userName === stream.userName);
       if (streamExists === -1) {
-        stream.url = "https://www.twitch.tv/" + stream.userName;
+        stream.url = `https://www.twitch.tv/${stream.userName}`;
         stream.timer = reset;
         streams.push(stream);
-        if (!firstCall) streamEmitter.emit('stream', stream);
-      } else {
+        if (!firstCall) {
+          streamEmitter.emit("stream", stream);
+        }
+      }
+      else {
         streams[streamExists].timer = reset;
       }
     }
-    for (let stream in streams) {
-      streams[stream].timer = streams[stream].timer - loopDelay;
-      if (streams[stream].timer < 1) {
-        streams.splice(stream, 1);
+
+    for (const stream in streams) {
+      if (Object.prototype.hasOwnProperty.call(streams, stream)) {
+        streams[stream].timer = streams[stream].timer - loopDelay;
+        if (streams[stream].timer < 1) {
+          streams.splice(stream, 1);
+        }
       }
     }
   }
+
   await sleep(loopDelay);
   loop(false);
-} setTimeout(loop, 10 * 1000); // 10 seconds.
+};
+
+setTimeout(loop, 10 * 1000);
 
 export default {
   "newStream": streamEmitter,
   "getStreams": () => {
     return streams;
-  }
+  },
 };

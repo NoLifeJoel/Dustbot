@@ -1,20 +1,18 @@
-import needle from 'needle';
-import fs from 'fs';
-import EventEmitter from 'events';
+import needle from "needle";
+import fs from "fs";
+import EventEmitter from "events";
 
-import replayTools from './util.js';
+import replayTools from "./util.js";
 
-import config from '../../config.json';
+import config from "../../config.json";
 
 export const replayEmitter = new EventEmitter();
 
-function sleep (ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  *
- * Contents of "let replay = JSON.parse(res.body);":
+ * Contents of result of GET `https://dustkid.com/replayviewer.php?replayId=${replayId}&json=true&metaonly&noprettyprint`:
  *
  * @rid [Number] Internal dustkid.com replay ID, if incremented by 1 then made negative can be used to query for the replay in the Dustkid API.
  * @user [Number] User ID of the user that uploaded the replay.
@@ -25,7 +23,7 @@ function sleep (ms) {
  * @score_finesse [Number: 1-5] 1 = D, 2 = C, 3 = B, 4 = A, 5 = S
  * @apples [Number] Number of apples the user has hit in the replay.
  * @timestamp [Number: Unix Epoch] Time/day the replay was uploaded.
- * @replay_id [Number] if > 0, the Replay ID that can be used across dustkid.com & Hitbox, otherwise dustkid.com only.
+ * @replayId [Number] if > 0, the Replay ID that can be used across dustkid.com & Hitbox, otherwise dustkid.com only.
  * @validated [Number] 1 = Validated, -1 = Frame advance, -5 = TAS, -7 = Minecraft plugin, -8 = Boss mode plugin, -9 = Unload% plugin
  * @dustkid [Number] Appears to always return 1???
  * @input_jumps [Number] Jump inputs.
@@ -62,13 +60,89 @@ function sleep (ms) {
  *
  */
 
-async function get_replay (replay_id) {
-  let replay = await needle('get', `https://dustkid.com/replayviewer.php?replay_id=${replay_id}&json=true&metaonly&noprettyprint`);
-  if (/^text\/html/.test(replay.headers['content-type'])) throw new Error('Replay not found.');
+const getReplay = async (replayId) => {
+  let replay = await needle("get", `https://dustkid.com/replayviewer.php?replayId=${replayId}&json=true&metaonly&noprettyprint`);
+
+  if (/^text\/html/.test(replay.headers["content-type"])) {
+    throw new Error("Replay not found.");
+  }
+
   replay = JSON.parse(replay.body);
-  if (replay === false) throw new Error('Replay missing metadata.');
+  if (replay === false) {
+    throw new Error("Replay missing metadata.");
+  }
+
   return replay;
-}
+};
+
+/**
+ *
+ * This is what sortHistory returns after feeding it pbHistory. It's ordered by rank, from smallest to biggest.
+ * @replays [Object]
+ *    @scores [Array]->[Object]
+ *        @timestamp [Number: Unix Epoch] Time/day the replay was uploaded.
+ *        @time [Number] Time in milliseconds it took the user to complete the level.
+ *        @rank [Number] What rank the PB would be if it were current, 1 indexed.
+ *    @times [Array]->[Object] Similar to the scores array above.
+ *        @timestamp [Number: Unix Epoch] Time/day the replay was uploaded.
+ *        @time [Number] Time in milliseconds it took the user to complete the level.
+ *        @rank [Number] What rank the PB would be if it were current, 1 indexed.
+ */
+
+const sortHistory = (pbHistory) => {
+  const replays = {};
+  for (const timesRanks in pbHistory.pbtimes) {
+    if (Object.prototype.hasOwnProperty.call(pbHistory.pbtimes, timesRanks)) {
+      const dataIterations = pbHistory.pbtimes[timesRanks].x.length;
+      if (pbHistory.pbtimes[timesRanks].name === "Scores PBs") {
+        replays.scores = new Array(dataIterations);
+        for (let data = 0; data < dataIterations; data++) {
+          const replay = {
+            "timestamp": Math.trunc(pbHistory.pbtimes[timesRanks].x[data] / 1000),
+            "time": Math.round(pbHistory.pbtimes[timesRanks].y[data] * 1000),
+            "rank": pbHistory.pbranks[timesRanks].y[data],
+          };
+          replays.scores[data] = replay;
+        }
+        replays.scores.reverse();
+      }
+      if (pbHistory.pbtimes[timesRanks].name === "Times PBs") {
+        replays.times = new Array(dataIterations);
+        for (let data = 0; data < dataIterations; data++) {
+          const replay = {
+            "timestamp": Math.trunc(pbHistory.pbtimes[timesRanks].x[data] / 1000),
+            "time": Math.round(pbHistory.pbtimes[timesRanks].y[data] * 1000),
+            "rank": pbHistory.pbranks[timesRanks].y[data],
+          };
+          replays.times[data] = replay;
+        }
+        replays.times.reverse();
+      }
+    }
+  }
+
+  return replays;
+};
+
+const updateNewestReplay = async () => {
+  const response = await needle("get", "https://dustkid.com/search.php?validation=1&order=0&json=1&max=5");
+  const replays = JSON.parse(response.body);
+  if (typeof replays !== "object") {
+    throw new Error(replays);
+  }
+
+  for (const replay of replays) {
+    const replayId = Number(replay.replay.substring(8)); // replay.replay = /replay/[int]
+    if (replayId >= 0) { // Internally using dustkid ID's for the most part.
+      continue;
+    }
+    if (replayId < config.replays.newest) {
+      config.replays.newest = replayId;
+      fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
+    }
+    break;
+  }
+};
 
 /**
  *
@@ -99,212 +173,164 @@ async function get_replay (replay_id) {
  *
  */
 
-async function processReplay (replay_id) {
-  if (replay_id < config.replays.newest) {
+const processReplay = async (replayId) => {
+  if (replayId < config.replays.newest) {
     await updateNewestReplay();
-    if (replay_id < config.replays.newest) {
+    if (replayId < config.replays.newest) {
       await sleep(5 * 1000);
       return null;
     }
   }
-  let replay = await get_replay(replay_id);
-  replay.dustbot = { };
+
+  const replay = await getReplay(replayId);
+  replay.dustbot = {};
   if (replay && replay.validated && replayTools.level_thumbnails[replay.level] && replay.user > -1) { // Check if replay is validated, part of the base game, & not multiplayer.
-    if (replay.pb && (replay.rank_all_score < 10 || replay.rank_all_time < 10 || replay.level === 'yottadifficult' || replay.level === 'exec func ruin user')) {
-      let pbHistory = await needle('get', `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`);
+    if (replay.pb && (replay.rank_all_score < 10 || replay.rank_all_time < 10 || replay.level === "yottadifficult" || replay.level === "exec func ruin user")) {
+      let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`);
       pbHistory = JSON.parse(pbHistory.body);
+
       let firstSS = false;
       if (pbHistory.scorecounts[0].value === 1 && replay.score_completion === 5 && replay.score_finesse === 5) {
         firstSS = true;
       }
       pbHistory = sortHistory(pbHistory);
-      let replayBoard = 'score';
-      while (replayBoard !== 'done') {
-        if (pbHistory[replayBoard + 's'][0].timestamp === replay.timestamp) {
-          if (typeof replay.dustbot[replayBoard] === 'undefined') {
+
+      let replayBoard = "score";
+      while (replayBoard !== "done") {
+        if (pbHistory[replayBoard + "s"][0].timestamp === replay.timestamp) {
+          if (typeof replay.dustbot[replayBoard] === "undefined") {
             replay.dustbot[replayBoard] = {
               "top10": false,
-              "WR": false
+              "WR": false,
             };
-            if (replayBoard === 'score') {
+            if (replayBoard === "score") {
               replay.dustbot[replayBoard].firstSS = firstSS;
             }
           }
-          if (replay['rank_all_' + replayBoard] < 10) {
+          if (replay["rank_all_" + replayBoard] < 10) {
             replay.dustbot[replayBoard].top10 = true;
           }
-          if (replay['rank_all_' + replayBoard] === 0) {
-            let wrHistory = await needle('get', `https://dustkid.com/json/levelhistory/${encodeURIComponent(replay.level)}/all`);
+          if (replay["rank_all_" + replayBoard] === 0) {
+            let wrHistory = await needle("get", `https://dustkid.com/json/levelhistory/${encodeURIComponent(replay.level)}/all`);
             wrHistory = JSON.parse(wrHistory.body);
-            if (replay['rank_all_' + replayBoard + '_ties'] === 0) {
-              replay.dustbot[replayBoard].previous_wr = wrHistory.wrs[(replayBoard === 'score' ? 0 : 16)][(wrHistory.wrs[replayBoard === 'score' ? 0 : 16].length - 2)];
-              let previousName = await needle('get', `https://dustkid.com/json/profile/${replay.dustbot[replayBoard].previous_wr.user}/all`);
+            if (replay["rank_all_" + replayBoard + "_ties"] === 0) {
+              replay.dustbot[replayBoard].previous_wr = wrHistory.wrs[(replayBoard === "score" ? 0 : 16)][(wrHistory.wrs[replayBoard === "score" ? 0 : 16].length - 2)];
+              let previousName = await needle("get", `https://dustkid.com/json/profile/${replay.dustbot[replayBoard].previous_wr.user}/all`);
               previousName = Object.values(Object.values(JSON.parse(previousName.body))[0])[0].username;
               replay.dustbot[replayBoard].previous_wr.username = previousName;
             }
             replay.dustbot[replayBoard].WR = true;
           }
-          if (pbHistory[replayBoard + 's'][1]) {
-            replay.dustbot[replayBoard]['previous_rank'] = pbHistory[replayBoard + 's'][1].rank;
-            replay.dustbot[replayBoard]['previous_time'] = pbHistory[replayBoard + 's'][1].time;
-            replay.dustbot[replayBoard]['previous_timestamp'] = pbHistory[replayBoard + 's'][1].timestamp;
+          if (pbHistory[replayBoard + "s"][1]) {
+            replay.dustbot[replayBoard]["previous_rank"] = pbHistory[replayBoard + "s"][1].rank;
+            replay.dustbot[replayBoard]["previous_time"] = pbHistory[replayBoard + "s"][1].time;
+            replay.dustbot[replayBoard]["previous_timestamp"] = pbHistory[replayBoard + "s"][1].timestamp;
           }
         }
-        switch(replayBoard) {
-          case 'score':
-            replayBoard = 'time';
-          break;
+
+        switch (replayBoard) {
+          case "score":
+            replayBoard = "time";
+            break;
+
           default:
-            replayBoard = 'done';
-          break;
+            replayBoard = "done";
+            break;
         }
       }
     }
+
     charblock: if ((replay.rank_char_score === 0 && replay.rank_char_score_ties === 0) || (replay.rank_char_time  === 0 && replay.rank_char_time_ties  === 0)) {
       let character;
       switch (replay.character) {
         case 0:
-          character = 'man';
-        break;
+          character = "man";
+          break;
         case 1:
-          character = 'girl';
-        break;
+          character = "girl";
+          break;
         case 2:
-          character = 'kid';
-        break;
+          character = "kid";
+          break;
         case 3:
-          character = 'worth';
-        break;
+          character = "worth";
+          break;
         default: break charblock;
       }
-      let pbHistory = await needle('get', `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`);
+      let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`);
       pbHistory = JSON.parse(pbHistory.body);
       let firstSS = false;
       if (pbHistory.scorecounts[0].value === 1 && replay.score_completion === 5 && replay.score_finesse === 5) {
         firstSS = true;
       }
       pbHistory = sortHistory(pbHistory);
-      let replayBoard = 'score';
-      while (replayBoard !== 'done') {
-        if (pbHistory[replayBoard + 's'][0].timestamp === replay.timestamp) {
-          if (typeof replay.dustbot['char_' + replayBoard] === 'undefined') {
-            replay.dustbot['char_' + replayBoard] = {
+      let replayBoard = "score";
+      while (replayBoard !== "done") {
+        if (pbHistory[replayBoard + "s"][0].timestamp === replay.timestamp) {
+          if (typeof replay.dustbot["char_" + replayBoard] === "undefined") {
+            replay.dustbot["char_" + replayBoard] = {
               "top10": false,
-              "WR": false
+              "WR": false,
             };
           }
-          if (replayBoard === 'score') {
-            replay.dustbot['char_' + replayBoard].firstSS = firstSS;
+          if (replayBoard === "score") {
+            replay.dustbot["char_" + replayBoard].firstSS = firstSS;
           }
-          if (replay['rank_char_' + replayBoard] < 10) {
-            replay.dustbot['char_' + replayBoard].top10 = true;
+          if (replay["rank_char_" + replayBoard] < 10) {
+            replay.dustbot["char_" + replayBoard].top10 = true;
           }
-          if (replay['rank_char_' + replayBoard] === 0) {
-            replay.dustbot['char_' + replayBoard].WR = true;
+          if (replay["rank_char_" + replayBoard] === 0) {
+            replay.dustbot["char_" + replayBoard].WR = true;
           }
-          if (pbHistory[replayBoard + 's'][1]) {
-            replay.dustbot['char_' + replayBoard]['previous_rank'] = pbHistory[replayBoard + 's'][1].rank;
-            replay.dustbot['char_' + replayBoard]['previous_time'] = pbHistory[replayBoard + 's'][1].time;
-            replay.dustbot['char_' + replayBoard]['previous_timestamp'] = pbHistory[replayBoard + 's'][1].timestamp;
+          if (pbHistory[replayBoard + "s"][1]) {
+            replay.dustbot["char_" + replayBoard]["previous_rank"] = pbHistory[replayBoard + "s"][1].rank;
+            replay.dustbot["char_" + replayBoard]["previous_time"] = pbHistory[replayBoard + "s"][1].time;
+            replay.dustbot["char_" + replayBoard]["previous_timestamp"] = pbHistory[replayBoard + "s"][1].timestamp;
           }
         }
-        switch(replayBoard) {
-          case 'score':
-            replayBoard = 'time';
-          break;
+
+        switch (replayBoard) {
+          case "score":
+            replayBoard = "time";
+            break;
           default:
-            replayBoard = 'done';
-          break;
+            replayBoard = "done";
+            break;
         }
       }
     }
   }
-  replayEmitter.emit('replay', replay);
-  config.replays.last_processed = replay_id;
-  fs.writeFileSync('config.json', JSON.stringify(config, null, 2));
+
+  replayEmitter.emit("replay", replay);
+
+  config.replays.last_processed = replayId;
+  fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
+
   return replay;
-}
+};
 
 (async () => {
   await sleep(5 * 1000);
+
   while (true) {
     await sleep(2 * 1000);
+
     try {
-      let replay = await processReplay(config.replays.last_processed - 1);
-      // if (replay !== null) { }
-    } catch (e) {
-      if (e.message === 'Replay not found.') {
+      await processReplay(config.replays.last_processed - 1);
+    }
+    catch (error) {
+      if (error.message === "Replay not found.") {
         config.replays.last_processed--;
-      } else {
+      }
+      else {
         await sleep(10 * 1000);
-        if (e.code !== 'ECONNRESET' && e.message !== 'query timed out.' && e.message !== 'query timed out') {
-          console.error(e);
+        if (error.code !== "ECONNRESET" && error.message !== "query timed out." && error.message !== "query timed out") {
+          console.error(error);
         }
-        if (e.message === 'query timed out.' || e.message === 'query timed out') {
+        if (error.message === "query timed out." || error.message === "query timed out") {
           await sleep(10 * 1000);
         }
       }
     }
   }
 })();
-
-/**
- *
- * This is what sortHistory returns after feeding it pbHistory. It's ordered by rank, from smallest to biggest.
- * @replays [Object]
- *    @scores [Array]->[Object]
- *        @timestamp [Number: Unix Epoch] Time/day the replay was uploaded.
- *        @time [Number] Time in milliseconds it took the user to complete the level.
- *        @rank [Number] What rank the PB would be if it were current, 1 indexed.
- *    @times [Array]->[Object] Similar to the scores array above.
- *        @timestamp [Number: Unix Epoch] Time/day the replay was uploaded.
- *        @time [Number] Time in milliseconds it took the user to complete the level.
- *        @rank [Number] What rank the PB would be if it were current, 1 indexed.
- */
-
-function sortHistory (pbHistory) {
-  let replays = { };
-  for (let timesRanks in pbHistory.pbtimes) {
-    let dataIterations = pbHistory.pbtimes[timesRanks].x.length;
-    if (pbHistory.pbtimes[timesRanks].name === "Scores PBs") {
-      replays.scores = new Array(dataIterations);
-      for (let data = 0; data < dataIterations; data++) {
-        let replay = {
-          "timestamp": Math.trunc(pbHistory.pbtimes[timesRanks].x[data] / 1000),
-          "time": Math.round(pbHistory.pbtimes[timesRanks].y[data] * 1000),
-          "rank": pbHistory.pbranks[timesRanks].y[data]
-        };
-        replays.scores[data] = replay;
-      }
-      replays.scores.reverse();
-    }
-    if (pbHistory.pbtimes[timesRanks].name === "Times PBs") {
-      replays.times = new Array(dataIterations);
-      for (let data = 0; data < dataIterations; data++) {
-        let replay = {
-          "timestamp": Math.trunc(pbHistory.pbtimes[timesRanks].x[data] / 1000),
-          "time": Math.round(pbHistory.pbtimes[timesRanks].y[data] * 1000),
-          "rank": pbHistory.pbranks[timesRanks].y[data]
-        };
-        replays.times[data] = replay;
-      }
-      replays.times.reverse();
-    }
-  }
-  return replays;
-}
-
-async function updateNewestReplay () {
-  let response = await needle('get', "https://dustkid.com/search.php?validation=1&order=0&json=1&max=5");
-  let replays = JSON.parse(response.body);
-  if (typeof replays !== 'object') throw new Error(replays);
-  for (let replay of replays) {
-    let replay_id = Number(replay.replay.substring(8)); // replay.replay = /replay/[int]
-    if (replay_id >= 0) continue; // Internally using dustkid ID's for the most part.
-    if (replay_id < config.replays.newest) {
-      config.replays.newest = replay_id;
-      fs.writeFileSync('config.json', JSON.stringify(config, null, 2));
-    }
-    break;
-  }
-}
