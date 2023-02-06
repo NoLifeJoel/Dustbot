@@ -79,6 +79,8 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// put new server members into the "holding" channel, and require them to type
+// "!verify", as an anti-bot measure
 client.on("guildMemberAdd", async (member) => {
   if (member.guild.id === "83037671227658240") {
     const holdingRole = member.guild.roles.cache.find((role) => role.name === "holding");
