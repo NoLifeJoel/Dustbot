@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require("discord.js");
 
-const { getStreams } = require("../twitch/index.js");
+const { getStreams } = require("../../twitch/index.js");
 
 module.exports = {
   data: new SlashCommandBuilder()

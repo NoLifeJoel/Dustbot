@@ -1,84 +1,13 @@
-const fs = require("fs");
 const needle = require("needle");
 
-const { Client, Collection, GatewayIntentBits, Routes, REST, InteractionType, ActivityType } = require("discord.js");
+const client = require("./client.js");
 
-const replayTools = require("./replays/util.js");
-const twitch = require("./twitch/index.js");
+const replayTools = require("../replays/util.js");
+const twitch = require("../twitch/index.js");
 
-const config = require("../config.json");
+const config = require("../../config.json");
 
-const { discord: { token, clientId, channels }, autoVerify } = config;
-
-const client = new Client({
-  "intents": [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-});
-
-const commands = [];
-client.commands = new Collection();
-const commandFiles = fs.readdirSync("./commands").filter(file => file.endsWith(".js"));
-
-for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  client.commands.set(command.data.name, command);
-  commands.push(command.data.toJSON());
-}
-
-const rest = new REST({ version: "10" }).setToken(token);
-
-(async () => {
-  try {
-    await rest.put(
-      Routes.applicationCommands(clientId),
-      { "body": commands },
-    );
-  }
-  catch (error) {
-    console.error(error);
-  }
-})();
-
-client.once("ready", function setPlaying() {
-  client.user.setPresence({
-    "status": "online",
-    "activities": [{
-      "type": ActivityType.Playing,
-      "name": "Dustforce",
-    }],
-  });
-  setTimeout(setPlaying, 5 * 60 * 1000);
-});
-
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.type === InteractionType.ApplicationCommand) {
-    return;
-  }
-
-  const { commandName: command } = interaction;
-  if (!client.commands.has(command)) {
-    return;
-  }
-
-  if (interaction.channelId !== channels["bot"] && interaction.channelId !== channels["bot-testing"]) {
-    return;
-  }
-
-  try {
-    await client.commands.get(command).execute(interaction);
-  }
-  catch (error) {
-    console.error(error);
-    await interaction.reply({
-      content: "There was an error while executing this command!",
-      ephemeral: true,
-    });
-  }
-});
+const { discord: { channels }, autoVerify } = config;
 
 const uwu = (str) => {
   str = str.replace(/r|l/gi, (match) => {
@@ -123,6 +52,9 @@ const noThumbnailRegex = /^(\.|!)(nt)$/i;
 client.on("messageCreate", async (message) => {
   if ([channels["dustforce"], channels["races"], channels["tasforce"], channels["mapmaking"]].includes(message.channel.id)) {
     replayblock: if (message.content.indexOf("dustkid.com/replay/") !== -1 && !noThumbnailRegex.test(message.content.split(/ |\n/)[0])) {
+      // when a Dustkid replay URL is present in the message, fetch replay
+      // metadata and have Dustbot send a message with an embed
+
       const replayId = Number(message.content.split("dustkid.com/replay/")[1].split(/ |\n/)[0].replace(/[^0-9-]/g, ""));
       if (typeof replayId === "number" && !isNaN(replayId)) {
         message.channel.sendTyping();
@@ -216,17 +148,10 @@ client.on("messageCreate", async (message) => {
     }
   }
 
-  if (message.channel.id === channels["holding"]) {
-    const holdingRole = message.member.guild.roles.cache.find((role) => role.name === "holding");
-    if (message.content.toLowerCase() === "!verify" && message.member.roles.cache.has(holdingRole.id)) {
-      message.member.roles.remove(holdingRole);
-      if (autoVerify.indexOf(message.member.id) === -1) {
-        autoVerify.push(message.member.id);
-      }
-    }
-  }
-
   if ([channels["dustforce"], channels["bot"], channels["bot-testing"]].indexOf(message.channel.id) > -1) {
+    // respond to ".streams" messages, in various formats (e.g. ".strims",
+    // ".stwims", etc.)
+
     if (streamCommandRegex.test(message.content)) {
       message.channel.sendTyping();
 
@@ -286,19 +211,15 @@ client.on("messageCreate", async (message) => {
       }
     }
   }
-});
 
-client.on("guildMemberAdd", async (member) => {
-  if (member.guild.id === "83037671227658240") {
-    const holdingRole = member.guild.roles.cache.find((role) => role.name === "holding");
-    if (autoVerify.indexOf(member.id) === -1) {
-      const holdingChannel = member.guild.channels.cache.get(channels["holding"]);
-      member.roles.add(holdingRole);
-      holdingChannel.send(`<@${member.id}> type !verify to see the other channels. This is an anti-bot measure.`);
+  if (message.channel.id === channels["holding"]) {
+    // have new users send a "!verify" message when they join the server
+    const holdingRole = message.member.guild.roles.cache.find((role) => role.name === "holding");
+    if (message.content.toLowerCase() === "!verify" && message.member.roles.cache.has(holdingRole.id)) {
+      message.member.roles.remove(holdingRole);
+      if (autoVerify.indexOf(message.member.id) === -1) {
+        autoVerify.push(message.member.id);
+      }
     }
   }
 });
-
-client.login(token);
-
-module.exports = client;

@@ -1,8 +1,8 @@
 const { TwitterApi } = require("twitter-api-v2");
 
-const { parseTime, characterToString, scoreToLetter } = require("../replays/util.js");
+const { parseTime, characterToString, scoreToLetter } = require("./util.js");
 
-const config = require("../../config.json.js");
+const config = require("../../config.json");
 
 const twitter = new TwitterApi(config.twitter);
 
