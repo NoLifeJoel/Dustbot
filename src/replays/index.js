@@ -4,6 +4,8 @@ const EventEmitter = require("events");
 
 const client = require("../discord/client.js");
 
+const { SelfAdjustingInterval } = require("../util/interval.js");
+
 const replayTools = require("./util.js");
 
 const { createTwitterMessage } = require("./twitter.js");
@@ -133,23 +135,28 @@ const sortHistory = (pbHistory) => {
   return replays;
 };
 
-const updateNewestReplay = async () => {
+const updateNewestReplayId = async () => {
   const response = await needle("get", "https://dustkid.com/search.php?validation=1&order=0&json=1&max=5");
   const replays = JSON.parse(response.body);
   if (typeof replays !== "object") {
     throw new Error(replays);
   }
 
-  for (const replay of replays) {
-    const replayId = Number(replay.replay.substring(8)); // replay.replay = /replay/[int]
-    if (replayId >= 0) { // Internally using dustkid ID's for the most part.
+  for (const metadata of replays) {
+    // `metadata.replay` is a string like, "/replay/-1234567" or
+    // "/replay/1234567"
+    const replayId = Number(metadata.replay.substring(8));
+    if (replayId >= 0) {
+      // Dustkid replays have IDs that are negative numbers (to separate them
+      // from Hitbox replay IDs), which are the only ones we care about
       continue;
     }
+
     if (replayId < config.replays.newest) {
       config.replays.newest = replayId;
       fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
+      break;
     }
-    break;
   }
 };
 
@@ -184,8 +191,14 @@ const updateNewestReplay = async () => {
 
 const processReplay = async (replayId) => {
   if (replayId < config.replays.newest) {
-    await updateNewestReplay();
+    // replay IDs are negative numbers; check if we're caught up to the latest
+    // update
+
+    await updateNewestReplayId();
+
     if (replayId < config.replays.newest) {
+      // we're all caught up to the latest replay, so increase the interval
+      // somewhat
       await sleep(5 * 1000);
       return null;
     }
@@ -193,7 +206,8 @@ const processReplay = async (replayId) => {
 
   const replay = await getReplay(replayId);
   replay.dustbot = {};
-  if (replay && replay.validated && replayTools.level_thumbnails[replay.level] && replay.user > -1) { // Check if replay is validated, part of the base game, & not multiplayer.
+  if (replay && replay.validated && replayTools.level_thumbnails[replay.level] && replay.user > -1) {
+    // replay is validated, part of the base game, and not multiplayer.
     if (replay.pb && (replay.rank_all_score < 10 || replay.rank_all_time < 10 || replay.level === "yottadifficult" || replay.level === "exec func ruin user")) {
       let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`);
       pbHistory = JSON.parse(pbHistory.body);
@@ -332,32 +346,30 @@ const processReplay = async (replayId) => {
   return replay;
 };
 
-(async () => {
-  await sleep(5 * 1000);
-
-  while (true) {
-    await sleep(2 * 1000);
-
-    try {
-      await processReplay(config.replays.lastProcessed - 1);
+const processReplays = async () => {
+  try {
+    await processReplay(config.replays.lastProcessed - 1);
+  }
+  catch (error) {
+    if (error.message === "Replay not found.") {
+      config.replays.lastProcessed--;
     }
-    catch (error) {
-      if (error.message === "Replay not found.") {
-        config.replays.lastProcessed--;
+    else {
+      await sleep(10 * 1000);
+      if (error.code !== "ECONNRESET" && error.message !== "query timed out.") {
+        console.error(error);
       }
-      else {
-        await sleep(10 * 1000);
-        if (error.code !== "ECONNRESET" && error.message !== "query timed out.") {
-          console.error(error);
-        }
 
-        if (error.message === "query timed out.") {
-          await sleep(10 * 1000);
-        }
+      if (error.message === "query timed out.") {
+        await sleep(10 * 1000);
       }
     }
   }
-})();
+};
+
+new SelfAdjustingInterval(processReplays, 2000, (error) => {
+  console.error(error, "failed to process replays.");
+}).start();
 
 let leaderboardUpdatesChannel;
 const createDiscordMessage = (replay, type, firstSS, char) => {
