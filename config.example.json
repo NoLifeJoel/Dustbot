@@ -1,8 +1,11 @@
 {
   "discord": {
-    "token": "STRING/TOKEN", // Client token from the discord website in the developers section.
-    "client_id": "STRING/ID", // Bot client ID
-    "channels": { // I honestly don't feel like explaining this one in detail right now.
+    // Client token from the discord website in the developers section.
+    "token": "STRING/TOKEN",
+    // Bot client ID
+    "client_id": "STRING/ID",
+    "channels": {
+      // Unique channel IDs, which you can only find out by having your bot run in the server and logging them manually (`client.channels.cache`)
       "dustforce": "276106941875355658",
       "races": "298677601881292800",
       "tasforce": "202307017581395968",
@@ -15,9 +18,12 @@
   },
 
   "twitch": {
-    "clientId": "client_id", // Client ID from the twitch website in the developers section.
-    "clientSecret": "client_secret", // Client secret from the twitch website in the developers section.
-    "games": [ // One of these is Dustforce, the other is Dustforce DX.
+    // Client ID from the twitch website in the developers section.
+    "clientId": "clientId",
+    // Client secret from the twitch website in the developers section.
+    "clientSecret": "clientSecret",
+    "games": [
+      // One of these is Dustforce, the other is Dustforce DX.
       "1436588895",
       "29093"
     ]
