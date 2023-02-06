@@ -86,7 +86,6 @@ client.once("ready", () => {
   mainChannel = client.channels.cache.get(config.discord.channels["dustforce"]);
 
   streamEmitter.on("stream", (stream) => {
-    mainChannel.sendTyping();
     mainChannel.send(`<${stream.url}> just went live: ${stream.title}`).catch((error) => {
       console.error(error);
     });
