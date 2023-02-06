@@ -18,9 +18,10 @@ const apiClient = new ApiClient({ authProvider });
 
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-const reset = 3 * 60 * 1000;
+const expire = 3 * 60 * 1000;
 const loopDelay = 45 * 1000;
 
+let mainChannel;
 const loop = async (firstCall = true) => {
   let results = null;
   try {
@@ -38,24 +39,42 @@ const loop = async (firstCall = true) => {
       const streamExists = streams.findIndex(streamCache => streamCache.userName === stream.userName);
       if (streamExists === -1) {
         stream.url = `https://www.twitch.tv/${stream.userName}`;
-        stream.timer = reset;
+        stream.timer = expire;
         streams.push(stream);
+
         if (!firstCall) {
           streamEmitter.emit("stream", stream);
         }
       }
       else {
-        streams[streamExists].timer = reset;
+        streams[streamExists].timer = expire;
       }
     }
 
     for (const stream in streams) {
       if (Object.prototype.hasOwnProperty.call(streams, stream)) {
+        // remove streams from the cache that have not been live in some time
         streams[stream].timer = streams[stream].timer - loopDelay;
         if (streams[stream].timer < 1) {
           streams.splice(stream, 1);
         }
       }
+    }
+
+    if (firstCall) {
+      // in case Dustbot was reset, announce all streams that are currently
+      // live, in case Dustbot failed to do so previously, when it was
+      // presumably broken and needed to be reset in the first place
+      let message = "Currently live:\n";
+      const messages = [];
+      for (const { title, url } of streams) {
+        messages.push(`<${url}> ${title}`);
+      }
+      message += messages.join("\n");
+
+      mainChannel.send(message).catch((error) => {
+        console.error(error);
+      });
     }
   }
 
@@ -63,19 +82,18 @@ const loop = async (firstCall = true) => {
   loop(false);
 };
 
-setTimeout(loop, 10 * 1000);
-
-let mainChannel;
 client.once("ready", () => {
   mainChannel = client.channels.cache.get(config.discord.channels["dustforce"]);
 
   streamEmitter.on("stream", (stream) => {
     mainChannel.sendTyping();
-    mainChannel.send("<" + stream.url + "> just went live: " + stream.title).catch((error) => {
+    mainChannel.send(`<${stream.url}> just went live: ${stream.title}`).catch((error) => {
       console.error(error);
     });
   });
 });
+
+loop();
 
 module.exports = {
   "newStream": streamEmitter,

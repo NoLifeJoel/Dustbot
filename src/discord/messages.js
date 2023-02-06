@@ -3,7 +3,7 @@ const needle = require("needle");
 const client = require("./client.js");
 
 const replayTools = require("../replays/util.js");
-const twitch = require("../twitch/index.js");
+const twitch = require("../twitch/observer.js");
 
 const config = require("../../config.json");
 

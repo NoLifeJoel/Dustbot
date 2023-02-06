@@ -27,7 +27,7 @@ module.exports = {
     const setRole = async (type, role) => {
       if (publicRoles.includes(role.name.toLowerCase())) {
         await interaction.member.roles[type](role).then(async () => {
-          await interaction.reply(`${(type === "remove" ? "Removed" : "Added")} \`${role.name.toLowerCase()}\` role.`);
+          await interaction.reply(`${(type === "remove" ? "Removed" : "Added")} \`${role.name}\` role.`);
         }).catch(e => console.error(e));
       }
       else {
