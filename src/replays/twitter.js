@@ -1,4 +1,4 @@
-const { TwitterApi } = require("twitter-api-v2");
+// const { TwitterApi } = require("twitter-api-v2");
 
 const { parseTime, characterToString, scoreToLetter } = require("./util.js");
 
@@ -7,7 +7,8 @@ const config = require("../../config.json");
 // const twitter = new TwitterApi(config.twitter);
 
 const createTwitterMessage = (replay, type) => {
-  // DEV-NOTE: don't create twitter messages for the moment anymore
+  // DEV-NOTE: don't create twitter messages for the moment anymore, while we
+  // await major changes to their API provision
   return;
 
   const previousSecond = replay.dustbot[type.toLowerCase()].previous_wr;
