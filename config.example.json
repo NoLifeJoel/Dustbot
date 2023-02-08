@@ -5,7 +5,7 @@
     // Bot client ID
     "client_id": "STRING/ID",
     "channels": {
-      // Unique channel IDs, which you can only find out by having your bot run in the server and logging them manually (`client.channels.cache`)
+      // Unique Discord channel IDs
       "dustforce": "276106941875355658",
       "races": "298677601881292800",
       "tasforce": "202307017581395968",
