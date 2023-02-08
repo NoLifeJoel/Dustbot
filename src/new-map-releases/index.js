@@ -81,6 +81,13 @@ setInterval(() => {
   }
 }, 1000);
 
+// keep a list of tags that will make Dustbot ignore the map entirely
+const ignoreTags = [
+  "ignore",
+  "db-ignore",
+  "dustbot-ignore",
+];
+
 const embedSideColors = [
   "404556",
   "60515c",
@@ -98,6 +105,11 @@ let _decreaseColourIndex = false;
 
 let mapReleasesChannel;
 let roleId;
+
+const escapeMarkdown = function(text) {
+  return text.replace(/(_|\*|~|`|\|)/g, "\\$1");
+};
+
 const sendMessages = async (maps) => {
   if (!maps.length) {
     return;
@@ -114,7 +126,7 @@ const sendMessages = async (maps) => {
   const messages = [];
 
   const descriptionLengthMax = 150;
-  for (let { atlasId, filename, description, authorName, authorAvatar } of maps) {
+  for (let { atlasId, filename, authorName, authorAvatar, description, tags } of maps) {
     // split the filename by hyphens, and remove the last element which
     // corresponds to the map ID, as the filename has a format such as:
     // "cool-ramen-10490"; note that if the map name has hyphens in it that
@@ -125,23 +137,27 @@ const sendMessages = async (maps) => {
     split.pop();
     let mapName = split.filter(Boolean).join(" ");
     if (!mapName) {
-      // though unlikely, it seems this map is simply a hyphen, or a
-      // collection of them; get the length of them and return half minus one
-      // (which exempts the separator between the map name and ID in the
-      // original filename)
+      // though unlikely, it seems this map is simply a hyphen, or a collection
+      // of them; get the length of them and return half minus one (which
+      // exempts the separator between the map name and ID in the original
+      // filename)
       const hyphenCount = (filename.match(/-/g) || []).length;
       for (let i = 0; i < hyphenCount; i++) {
         mapName += "-";
       }
 
       if (!mapName) {
-        // seemingly this map does not have a name, though we never expect
-        // this to happen
+        // seemingly this map does not have a name, though we never expect this
+        // to happen
         mapName = "???";
       }
     }
 
     if (description) {
+      // escape markdown characters, so that e.g. an asterisk would not cause
+      // the entire description in the message to be displayed in italics
+      description = escapeMarkdown(description);
+
       if (description.length > descriptionLengthMax) {
         description = `${description.substring(0, descriptionLengthMax)}...`;
       }
@@ -150,9 +166,9 @@ const sendMessages = async (maps) => {
       // will show up as empty strings in the resulting array)
       let descriptionByNewline = description.split("\n");
       if (descriptionByNewline.length > 3) {
-        // if a description has more than 3 lines, only use the first 3, and
-        // add a new line with "(...)" to indicate a part of the description
-        // was cut off
+        // if a description has more than 3 lines, only use the first 3, and add
+        // a new line with "(...)" to indicate a part of the description was cut
+        // off
         descriptionByNewline = descriptionByNewline.slice(0, 3);
         descriptionByNewline.push("(...)");
         description = descriptionByNewline.join("\n");
@@ -164,6 +180,40 @@ const sendMessages = async (maps) => {
     else {
       // // add a link to the map's Dustkid leaderboards
       // description = `\n[Leaderboards](http://dustkid.com/level/${filename})`;
+    }
+
+    // possibly display existing tags, limiting the overall displayed length
+    // (which means we only look at `tag.name.length` not `tag.href.length` too,
+    // as the tags will be transformed into hyperlinks)
+    const maxLength = 50;
+    let _reachedMax = false;
+    let currentString = "";
+    const displayedTags = [];
+    for (const tag of tags) {
+      if (tag.name.length > maxLength) {
+        _reachedMax = true;
+        continue;
+      }
+
+      currentString += ` ${tag.name}`;
+      if (currentString.length >= maxLength) {
+        _reachedMax = true;
+        break;
+      }
+
+      tag.name = escapeMarkdown(tag.name);
+      displayedTags.push(tag);
+    }
+
+    if (displayedTags.length) {
+      description += "\n\nTags:";
+      for (const tag of displayedTags) {
+        description += ` [${tag.name}](${tag.href})`;
+      }
+
+      if (_reachedMax) {
+        description += " etc.";
+      }
     }
 
     const colour = "#" + embedSideColors[colourIndex];
@@ -185,7 +235,7 @@ const sendMessages = async (maps) => {
 
     const embed = new EmbedBuilder()
       .setColor(colour)
-      .setTitle(mapName)
+      .setTitle(`${mapName}`)
       .setAuthor({ name: authorName, url: `http://atlas.dustforce.com/user/${encodeURI(authorName)}`, iconURL: authorAvatar })
       .setURL(`http://atlas.dustforce.com/${atlasId}`)
       .setThumbnail(`http://atlas.dustforce.com/gi/maps/${filename}.png`)
@@ -301,11 +351,38 @@ const fetchAtlasData = async (atlasId) => {
       description = descriptionSpan.text();
     }
 
+    let _ignore = false;
+    const tags = [];
+    const _tags = $(".tag-area a");
+    for (const tag of _tags) {
+      const text = $(tag).text().replace(/\s/g, "-");
+
+      if (ignoreTags.includes(text.toLowerCase())) {
+        _ignore = true;
+        break;
+      }
+
+      tags.push({
+        name: text,
+        href: `http://atlas.dustforce.com/tag/${encodeURI(text)}`,
+      });
+    }
+
+    if (_ignore) {
+      // have Dustbot ignore this map; cache it as hidden for now, in case
+      // someone removes the tag later, so Dustbot will pick it up again,
+      // assuming it hasn't expired by that point; this is mostly for events
+      return {
+        _hidden: true,
+      };
+    }
+
     return {
       _hidden: false,
       description,
       authorName,
       authorAvatar,
+      tags,
     };
   }
 
@@ -350,25 +427,17 @@ const maybeUnhideCachedMaps = async () => {
       continue;
     }
 
-    const {
-      description,
-      authorName,
-      authorAvatar,
-    } = atlasData;
-
-    _messages.push({
-      atlasId,
-      filename,
-      description,
-      authorName,
-      authorAvatar,
-    });
-
     cache[atlasId] = {
       _createdAt,
       filename,
       _hidden: false,
     };
+
+    _messages.push({
+      ...atlasData,
+      atlasId,
+      filename,
+    });
   }
 
   if (_messages.length) {
@@ -453,28 +522,20 @@ const processQueue = async () => {
       continue;
     }
 
-    const {
-      _hidden,
-      description,
-      authorName,
-      authorAvatar,
-    } = atlasData;
-
-    if (!_hidden) {
-      _messages.push({
-        atlasId,
-        filename,
-        description,
-        authorName,
-        authorAvatar,
-      });
-    }
-
+    const { _hidden } = atlasData;
     cache[atlasId] = {
       _createdAt: Date.now(),
       filename,
       _hidden,
     };
+
+    if (!_hidden) {
+      _messages.push({
+        ...atlasData,
+        atlasId,
+        filename,
+      });
+    }
   }
 
   if (_messages.length) {
