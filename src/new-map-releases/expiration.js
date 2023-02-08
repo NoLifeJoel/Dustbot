@@ -8,7 +8,6 @@ const limit = 100;
 let lastMessageId;
 let cache;
 const bulkDeleteMessages = async (data, channel, expiration = 0, beforeId = null) => {
-  console.log( "--- BULK DELETE MESSAGES ---" );
   if (!data) {
     data = JSON.parse(fs.readFileSync(dataPath));
     ({ cache } = data);
@@ -57,7 +56,6 @@ const bulkDeleteMessages = async (data, channel, expiration = 0, beforeId = null
 };
 
 const cleanCache = async (expiration) => {
-  console.log("--- CLEAN CACHE ---");
   return new Promise(resolve => {
     const now = Date.now();
 
