@@ -13,6 +13,7 @@
       "bot": "871499721850621962",
       "holding": "533384972283936788",
       "leaderboard-updates": "204159286966747136",
+      "new-map-releases": "1072244277641498694",
       "bot-testing": "928129547784814613"
     }
   },
@@ -32,8 +33,8 @@
     // Array of Discord User ID's exempt from bot verification.
   ],
   "replays": {
-    "newest": -14602771,
-    "lastProcessed": -14602771
+    "newest": -14898651,
+    "lastProcessed": -14898651
   },
 
   "twitter": {
