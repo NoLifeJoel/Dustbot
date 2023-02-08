@@ -447,7 +447,9 @@ const retroactivelyHideMaps = async () => {
         }
       }
 
-      delete cache[atlasId];
+      cache[atlasId]._hidden = _hidden;
+      cache[atlasId]._unpublished = _unpublished;
+      delete cache[atlasId].messageId;
       _wroteData = true;
     }
   }
