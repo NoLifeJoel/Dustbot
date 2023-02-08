@@ -2,7 +2,8 @@
   "name": "Dustbot",
   "version": "1.4.1",
   "description": "Posts twitch streams to discord, replay data to the discord & twitter.",
-  "main": "index.js",
+  "main": "src/index.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -19,11 +20,15 @@
   "dependencies": {
     "@twurple/api": "^5.1",
     "@twurple/auth": "^5.1",
+    "cheerio": "^1.0.0-rc.12",
     "discord.js": "^14.3.0",
     "needle": "^3.1.0",
     "twitter-api-v2": "^1.12.0"
   },
   "engines": {
     "node": ">=16.9.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.33.0"
   }
 }
