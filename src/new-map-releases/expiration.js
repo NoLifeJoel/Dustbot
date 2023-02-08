@@ -5,9 +5,6 @@ const dataPath = `${__dirname}/data.json`;
 const deletableMessageIds = [];
 
 const limit = 100;
-// fetching of messages is limited to 100 per call by the API, so we'll need
-// to use pagination to get all of them; fetched messages are sorted from
-// newest to oldest
 let lastMessageId;
 let cache;
 const bulkDeleteMessages = async (data, channel, expiration = 0, beforeId = null) => {
@@ -18,6 +15,10 @@ const bulkDeleteMessages = async (data, channel, expiration = 0, beforeId = null
   }
 
   const now = Date.now();
+
+  // fetching of messages is limited to 100 per call by the API, so we'll need
+  // to use pagination to get all of them; fetched messages are sorted from
+  // newest to oldest
   const messagePage = await channel.messages.fetch({ limit, before: beforeId });
   messagePage.forEach(async (message) => {
     lastMessageId = message.id;
