@@ -185,7 +185,7 @@ const sendMessages = async (maps) => {
     // possibly display existing tags, limiting the overall displayed length
     // (which means we only look at `tag.name.length` not `tag.href.length` too,
     // as the tags will be transformed into hyperlinks)
-    const maxLength = 50;
+    const maxLength = 75;
     let _reachedMax = false;
     let currentString = "";
     const displayedTags = [];

@@ -4,9 +4,12 @@ const { parseTime, characterToString, scoreToLetter } = require("./util.js");
 
 const config = require("../../config.json");
 
-const twitter = new TwitterApi(config.twitter);
+// const twitter = new TwitterApi(config.twitter);
 
 const createTwitterMessage = (replay, type) => {
+  // DEV-NOTE: don't create twitter messages for the moment anymore
+  return;
+
   const previousSecond = replay.dustbot[type.toLowerCase()].previous_wr;
   const improvedBy = Number(previousSecond["time"]) - Number(replay["time"]);
 

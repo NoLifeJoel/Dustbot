@@ -67,7 +67,7 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
  */
 
 const getReplay = async (replayId) => {
-  let replay = await needle("get", `https://dustkid.com/replayviewer.php?replayId=${replayId}&json=true&metaonly&noprettyprint`);
+  let replay = await needle("get", `https://dustkid.com/replayviewer.php?replay_id=${replayId}&json=true&metaonly&noprettyprint`);
 
   if (/^text\/html/.test(replay.headers["content-type"])) {
     throw new Error("Replay not found.");
