@@ -38,25 +38,29 @@ const writeData = (fields) => {
   });
 };
 
-// const workInterval = 1000 * 30;
-const workInterval = 1000;
-// const processQueueInterval = 1000 * 60 * 1;
-const processQueueInterval = 3000;
+const workInterval = 1000 * 30;
+const processQueueInterval = 1000 * 60 * 1;
 // when maps are fetched, we first put them in a queue; this variable determines
 // how old maps need to be in the queue before we actually fetch the atlas data
 // and post a message for them; this is to give users time to hide their map if
 // need be (either because they made a mistake, or for an event like Custom Map
 // Race or DLC where maps get hidden immediately, and unhidden at a later date)
-// const minimumAge = 1000 * 60 * 5;
-const minimumAge = 1000;
-
-const unhideInterval = 1000 * 60 * 15;
+const minimumAge = 1000 * 60 * 5;
 
 const cleanExpiredDataInterval = 1000 * 60 * 60;
 // determine when maps expire, and should no longer be visible in the channel;
 // older messages will also get retroactively deleted if they've expired
-// const expiration = 1000 * 60 * 60 * 24 * 7 * 2;
-const expiration = 1000;
+const expiration = 1000 * 60 * 60 * 24 * 7 * 2;
+
+const unhideInterval = 1000 * 60 * 15;
+// check unpublished maps at a more rapid interval than hidden ones, as it is
+// possible we just caught someone in the process of publishing one, and don't
+// want to wait a while sending the message once they're finished doing so
+const unhideUnpublishedInterval = 1000 * 60 * 5;
+
+// some maps that are visible get hidden afterwards by their author; if we see
+// this, delete the posted message for that map retroactively
+const retroactivelyHideInterval = 1000 * 60 * 5;
 
 // keep track of timers (at 1fps), so we can execute all functions that write to
 // the JSON data file in sequence, to avoid potential issues with race
@@ -64,11 +68,15 @@ const expiration = 1000;
 let queueTimer = 0;
 let cleanUpTimer = 0;
 let unhideTimer = 0;
+let unhideUnpublishedTimer = 0;
+let retroactivelyHideTimer = 0;
 
 setInterval(() => {
   queueTimer += 1000;
   cleanUpTimer += 1000;
   unhideTimer += 1000;
+  unhideUnpublishedTimer += 1000;
+  retroactivelyHideTimer += 1000;
 
   if (queueTimer >= (24 * 60 * 60 * 1000)) {
     queueTimer = 0;
@@ -78,6 +86,12 @@ setInterval(() => {
   }
   if (unhideTimer >= (24 * 60 * 60 * 1000)) {
     unhideTimer = 0;
+  }
+  if (unhideTimer >= (24 * 60 * 60 * 1000)) {
+    unhideUnpublishedTimer = 0;
+  }
+  if (unhideTimer >= (24 * 60 * 60 * 1000)) {
+    retroactivelyHideTimer = 0;
   }
 }, 1000);
 
@@ -329,8 +343,8 @@ const fetchAtlasData = async (atlasId) => {
 
     const authorData = $(".qa-avatar-link");
     if (!authorData.html()) {
-      // this page does not have any author data, and therefore must be a
-      // hidden map
+      // this page does not have any author data, and therefore must be a hidden
+      // map
       return {
         _hidden: true,
       };
@@ -391,12 +405,13 @@ const fetchAtlasData = async (atlasId) => {
 
   if (response.statusCode === 404) {
     // this map is unpublished (meaning someone clicked "publish" in-game, but
-    // never posted the map in their browser); treat it as if it's hidden, as
-    // there is a chance that someone is currently in the process of publishing
-    // the map, and we just encountered it in the period where they're still
-    // filling in information and then actually saving the map
+    // never posted the map in their browser); mark it as such and treat it as
+    // hidden, as there is a chance that someone is currently in the process of
+    // publishing the map, and we just encountered it in the period where
+    // they're still filling in information and then actually saving the map
     return {
       _hidden: true,
+      _unpublished: true,
     };
   }
 
@@ -406,11 +421,54 @@ const fetchAtlasData = async (atlasId) => {
   throw error;
 };
 
-const maybeUnhideCachedMaps = async () => {
-  console.log("--- MAYBE UNHIDE MAPS ---");
+const retroactivelyHideMaps = async () => {
+  let _wroteData = false;
+  for (const [atlasId, { messageId }] of Object.entries(cache)) {
+    if (!messageId) {
+      // no message was posted for this map, as far as the cache is concerned
+      continue;
+    }
+
+    const { _hidden, _unpublished } = await fetchAtlasData(atlasId);
+    if (_hidden || _unpublished) {
+      // this map was hidden (or somehow unpublished, perhaps deleted by admins)
+      // in the meantime, so delete the message
+      try {
+        await mapReleasesChannel.messages.delete(messageId);
+      }
+      catch (error) {
+        if (error.code === 10008) {
+          // "Message Unknown"; remove from the cache anyway since it apparently
+          // should not be there
+        }
+        else {
+          console.error(error);
+          continue;
+        }
+      }
+
+      delete cache[atlasId];
+      _wroteData = true;
+    }
+  }
+
+  if (_wroteData) {
+    await writeData({
+      cache: { ...cache },
+    });
+  }
+};
+
+const maybeUnhideCachedMaps = async (_onlyUnpublished = false) => {
+  let _wroteData = false;
   const _messages = [];
-  for (const [atlasId, { _hidden, filename, _createdAt }] of Object.entries(cache)) {
-    if (!_hidden) {
+  for (const [atlasId, { _hidden, _unpublished, filename, _createdAt }] of Object.entries(cache)) {
+    if (!_hidden && !_unpublished) {
+      continue;
+    }
+
+    if (_onlyUnpublished && !_unpublished) {
+      // only check unpublished maps
       continue;
     }
 
@@ -418,6 +476,13 @@ const maybeUnhideCachedMaps = async () => {
     try {
       atlasData = await fetchAtlasData(atlasId);
       if (atlasData._hidden) {
+        if (_unpublished && !atlasData._unpublished) {
+          // the map is still hidden, but no longer unpublished, so unmark it in
+          // the cache
+          delete cache[atlasId]._unpublished;
+          _wroteData = true;
+        }
+
         // the map is still hidden, continue
         continue;
       }
@@ -432,6 +497,7 @@ const maybeUnhideCachedMaps = async () => {
       filename,
       _hidden: false,
     };
+    _wroteData = true;
 
     _messages.push({
       ...atlasData,
@@ -450,9 +516,11 @@ const maybeUnhideCachedMaps = async () => {
     }
   }
 
-  await writeData({
-    cache: { ...cache },
-  });
+  if (_wroteData) {
+    await writeData({
+      cache: { ...cache },
+    });
+  }
 };
 
 const fetchNewMap = async (atlasId) => {
@@ -522,14 +590,19 @@ const processQueue = async () => {
       continue;
     }
 
-    const { _hidden } = atlasData;
-    cache[atlasId] = {
+    const { _hidden, _unpublished } = atlasData;
+    const doc = {
       _createdAt: Date.now(),
       filename,
       _hidden,
     };
 
-    if (!_hidden) {
+    if (_unpublished) {
+      doc._unpublished = true;
+    }
+    cache[atlasId] = doc;
+
+    if (!_hidden && !_unpublished) {
       _messages.push({
         ...atlasData,
         atlasId,
@@ -569,14 +642,29 @@ const work = async () => {
 
   if (unhideTimer >= unhideInterval) {
     unhideTimer = 0;
+    unhideUnpublishedTimer = 0;
 
-    // possible unhide maps that have been cached as hidden, and in the meantime
-    // been reshown by the map author on Atlas
+    // possible unhide maps that have been cached as hidden (and/or
+    // unpublished), and in the meantime been reshown by the map author on Atlas
     await maybeUnhideCachedMaps();
+  }
+  else if (unhideUnpublishedTimer >= unhideUnpublishedInterval) {
+    unhideUnpublishedTimer = 0;
+
+    // possible unhide maps that have been cached as unpublished, and in the
+    // meantime been reshown by the map author on Atlas
+    await maybeUnhideCachedMaps(true);
+  }
+
+  if (retroactivelyHideTimer >= retroactivelyHideInterval) {
+    retroactivelyHideTimer = 0;
+
+    // possible unhide maps that have been cached as unpublished, and in the
+    // meantime been reshown by the map author on Atlas
+    await retroactivelyHideMaps();
   }
 
   if (queueTimer >= processQueueInterval) {
-    console.log( "--- PROCESS QUEUE ---");
     queueTimer = 0;
 
     // process maps that are waiting in the queue
@@ -600,7 +688,6 @@ const work = async () => {
     }
 
     try {
-      console.log(`--- FETCH NEW MAP ${atlasId} ---`);
       const filename = await fetchNewMap(atlasId);
 
       if (!filename) {
@@ -642,13 +729,14 @@ client.once("ready", async (_client) => {
   }
 
   await bulkDeleteMessages(null, mapReleasesChannel, expiration);
-
   await cleanCache(expiration);
 
   data = JSON.parse(fs.readFileSync(dataPath));
   ({ currentAtlasId, cache, queue } = data);
 
   await maybeUnhideCachedMaps();
+
+  await retroactivelyHideMaps();
 
   if (queue.length) {
     // process the existing queue on startup
