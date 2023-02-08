@@ -8,6 +8,7 @@ const publicRoles = [
   "racers",
   "randomizer",
   "weekinreview",
+  "map-releases",
 
   // miscellaneous
   "amongus",

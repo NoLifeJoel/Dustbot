@@ -73,21 +73,21 @@ const fetchStreams = async () => {
       }
     }
 
-    if (streams.length && _initialCall) {
-      // in case Dustbot was just started up, announce all streams that are
-      // currently live, in case Dustbot failed to do so previously, when it was
-      // presumably broken and needed to be restarted
-      let message = "Currently live:\n";
-      const messages = [];
-      for (const { title, url } of streams) {
-        messages.push(`<${url}> ${title}`);
-      }
-      message += messages.join("\n");
+    // if (streams.length && _initialCall) {
+    //   // in case Dustbot was just started up, announce all streams that are
+    //   // currently live, in case Dustbot failed to do so previously, when it was
+    //   // presumably broken and needed to be restarted
+    //   let message = "Currently live:\n";
+    //   const messages = [];
+    //   for (const { title, url } of streams) {
+    //     messages.push(`<${url}> ${title}`);
+    //   }
+    //   message += messages.join("\n");
 
-      mainChannel.send(message).catch((error) => {
-        console.error(error);
-      });
-    }
+    //   mainChannel.send(message).catch((error) => {
+    //     console.error(error);
+    //   });
+    // }
   }
 
   if (_initialCall) {
