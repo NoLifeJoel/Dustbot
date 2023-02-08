@@ -52,7 +52,7 @@ const cleanExpiredDataInterval = 1000 * 60 * 60;
 // older messages will also get retroactively deleted if they've expired
 const expiration = 1000 * 60 * 60 * 24 * 7 * 2;
 
-const unhideInterval = 1000 * 60 * 15;
+const unhideInterval = 1000 * 60 * 10;
 // check unpublished maps at a more rapid interval than hidden ones, as it is
 // possible we just caught someone in the process of publishing one, and don't
 // want to wait a while sending the message once they're finished doing so
@@ -118,7 +118,7 @@ let colourIndex = 0;
 let _decreaseColourIndex = false;
 
 let mapReleasesChannel;
-let roleId;
+// let roleId;
 
 const escapeMarkdown = function(text) {
   return text.replace(/(_|\*|~|`|\|)/g, "\\$1");
