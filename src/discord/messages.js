@@ -61,11 +61,13 @@ client.on("messageCreate", async (message) => {
 
         let replay;
         try {
-          replay = await needle("get", `https://dustkid.com/replayviewer.php?replay_id=${replayId}&json=true&metaonly=true`);
+          replay = await needle("get", `https://dustkid.com/replayviewer.php?replay_id=${replayId}&json=true&metaonly=true`, {
+            parse: "json",
+          });
           if (/^text\/html/.test(replay.headers["content-type"])) {
             throw new Error("Replay not found.");
           }
-          replay = JSON.parse(replay.body);
+          replay = replay.body;
         }
         catch (error) {
           console.error(error);

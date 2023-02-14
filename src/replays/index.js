@@ -67,18 +67,19 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
  */
 
 const getReplay = async (replayId) => {
-  let replay = await needle("get", `https://dustkid.com/replayviewer.php?replay_id=${replayId}&json=true&metaonly&noprettyprint`);
+  const replay = await needle("get", `https://dustkid.com/replayviewer.php?replay_id=${replayId}&json=true&metaonly&noprettyprint`, {
+    parse: "json",
+  });
 
   if (/^text\/html/.test(replay.headers["content-type"])) {
     throw new Error("Replay not found.");
   }
 
-  replay = JSON.parse(replay.body);
-  if (replay === false) {
+  if (!replay || !replay.body || !Object.keys(replay.body).length) {
     throw new Error("Replay missing metadata.");
   }
 
-  return replay;
+  return replay.body;
 };
 
 /**
@@ -136,8 +137,10 @@ const sortHistory = (pbHistory) => {
 };
 
 const updateNewestReplayId = async () => {
-  const response = await needle("get", "https://dustkid.com/search.php?validation=1&order=0&json=1&max=5");
-  const replays = JSON.parse(response.body);
+  const response = await needle("get", "https://dustkid.com/search.php?validation=1&order=0&json=1&max=5", {
+    parse: "json",
+  });
+  const replays = response.body;
   if (typeof replays !== "object") {
     throw new Error(replays);
   }
@@ -209,8 +212,9 @@ const processReplay = async (replayId) => {
   if (replay && replay.validated && replayTools.level_thumbnails[replay.level] && replay.user > -1) {
     // replay is validated, part of the base game, and not multiplayer.
     if (replay.pb && (replay.rank_all_score < 10 || replay.rank_all_time < 10 || replay.level === "yottadifficult" || replay.level === "exec func ruin user")) {
-      let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`);
-      pbHistory = JSON.parse(pbHistory.body);
+      let { body: pbHistory } = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`, {
+        parse: "json",
+      });
 
       let firstSS = false;
       if (pbHistory.scorecounts[0].value === 1 && replay.score_completion === 5 && replay.score_finesse === 5) {
@@ -242,8 +246,10 @@ const processReplay = async (replayId) => {
 
             if (replay[`rank_all_${replayBoard}_ties`] === 0) {
               replay.dustbot[replayBoard].previous_wr = wrHistory.wrs[(replayBoard === "score" ? 0 : 16)][(wrHistory.wrs[replayBoard === "score" ? 0 : 16].length - 2)];
-              let previousName = await needle("get", `https://dustkid.com/json/profile/${replay.dustbot[replayBoard].previous_wr.user}/all`);
-              previousName = Object.values(Object.values(JSON.parse(previousName.body))[0])[0].username;
+              let previousName = await needle("get", `https://dustkid.com/json/profile/${replay.dustbot[replayBoard].previous_wr.user}/all`, {
+                parse: "json",
+              });
+              previousName = Object.values(Object.values(previousName.body)[0])[0].username;
               replay.dustbot[replayBoard].previous_wr.username = previousName;
             }
 
@@ -288,8 +294,9 @@ const processReplay = async (replayId) => {
           break charblock;
       }
 
-      let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`);
-      pbHistory = JSON.parse(pbHistory.body);
+      let { body: pbHistory } = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}/${character}`, {
+        parse: "json",
+      });
       let firstSS = false;
       if (pbHistory.scorecounts[0].value === 1 && replay.score_completion === 5 && replay.score_finesse === 5) {
         firstSS = true;
