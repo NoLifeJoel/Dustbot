@@ -189,11 +189,11 @@ const sendMessages = async (maps) => {
       }
 
       // // add a link to the map's Dustkid leaderboards
-      // description += `\n\n[Leaderboards](http://dustkid.com/level/${filename})`;
+      // description += `\n\n[Leaderboards](https://dustkid.com/level/${filename})`;
     }
     else {
       // // add a link to the map's Dustkid leaderboards
-      // description = `\n[Leaderboards](http://dustkid.com/level/${filename})`;
+      // description = `\n[Leaderboards](https://dustkid.com/level/${filename})`;
     }
 
     // possibly display existing tags, limiting the overall displayed length
@@ -250,10 +250,10 @@ const sendMessages = async (maps) => {
     const embed = new EmbedBuilder()
       .setColor(colour)
       .setTitle(`${mapName}`)
-      .setAuthor({ name: authorName, url: `http://atlas.dustforce.com/user/${encodeURI(authorName)}`, iconURL: authorAvatar })
-      .setURL(`http://atlas.dustforce.com/${atlasId}`)
-      .setThumbnail(`http://atlas.dustforce.com/gi/maps/${filename}.png`)
-      // .setImage(`http://atlas.dustforce.com/gi/maps/${filename}.png`)
+      .setAuthor({ name: authorName, url: `https://atlas.dustforce.com/user/${encodeURI(authorName)}`, iconURL: authorAvatar })
+      .setURL(`https://atlas.dustforce.com/${atlasId}`)
+      .setThumbnail(`https://atlas.dustforce.com/gi/maps/${filename}.png`)
+      // .setImage(`https://atlas.dustforce.com/gi/maps/${filename}.png`)
       .setFooter({ text: "Date" })
       .setTimestamp();
 
@@ -265,7 +265,7 @@ const sendMessages = async (maps) => {
       embed,
       atlasId,
       filename,
-      url: `http://atlas.dustforce.com/${atlasId}`,
+      url: `https://atlas.dustforce.com/${atlasId}`,
     });
   }
 
@@ -309,7 +309,7 @@ const sendMessages = async (maps) => {
             {
               style: 5,
               label: "Leaderboards",
-              url: `http://dustkid.com/level/${filename}`,
+              url: `https://dustkid.com/level/${filename}`,
               disabled: false,
               type: 2,
             },
@@ -378,7 +378,7 @@ const fetchAtlasData = async (atlasId) => {
 
       tags.push({
         name: text,
-        href: `http://atlas.dustforce.com/tag/${encodeURI(text)}`,
+        href: `https://atlas.dustforce.com/tag/${encodeURI(text)}`,
       });
     }
 
