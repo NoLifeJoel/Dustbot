@@ -9,7 +9,7 @@ const client = require("../discord/client.js");
 
 const { SelfAdjustingInterval } = require("../util/interval.js");
 
-const { bulkDeleteMessages, cleanCache } = require("./expiration.js");
+const { cleanCache } = require("./expiration.js");
 
 const baseUrl = "http://atlas.dustforce.com/";
 const atlasDownloadUrl = "http://atlas.dustforce.com/gi/downloader.php?id=";
@@ -635,8 +635,6 @@ const work = async () => {
   if (cleanUpTimer >= cleanExpiredDataInterval) {
     cleanUpTimer = 0;
 
-    // clean up expired messages from the channel
-    await bulkDeleteMessages(null, mapReleasesChannel, expiration);
     // clean the cache, which may have data that was never posted as a message;
     // this is not expected, it's a precaution
     await cleanCache(expiration);
@@ -730,7 +728,6 @@ client.once("ready", async (_client) => {
     return;
   }
 
-  await bulkDeleteMessages(null, mapReleasesChannel, expiration);
   await cleanCache(expiration);
 
   data = JSON.parse(fs.readFileSync(dataPath));
