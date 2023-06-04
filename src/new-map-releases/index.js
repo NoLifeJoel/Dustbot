@@ -325,6 +325,19 @@ const sendMessages = async (maps) => {
   return messageIdByAtlasIds;
 };
 
+const checkAtlasStatus = async () => {
+  // do a simple head request to the main page to check if Atlas is up
+  const response = await needle("head", baseUrl, {
+    timeout: 5000,
+  });
+
+  if (response.statusCode !== 200) {
+    return false;
+  }
+
+  return true;
+};
+
 const fetchAtlasData = async (atlasId) => {
   const response = await needle("get", `${baseUrl}${atlasId}`, {
     timeout: 5000,
@@ -638,6 +651,18 @@ const work = async () => {
     // clean the cache, which may have data that was never posted as a message;
     // this is not expected, it's a precaution
     await cleanCache(expiration);
+  }
+
+  try {
+    // check the status of Atlas up front
+    const ok = await checkAtlasStatus();
+    if (!ok) {
+      return;
+    }
+  }
+  catch (error) {
+    console.error(error);
+    return;
   }
 
   if (unhideTimer >= unhideInterval) {
