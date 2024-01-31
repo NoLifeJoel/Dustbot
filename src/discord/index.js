@@ -21,13 +21,33 @@ client.once("ready", function setPlaying() {
 
 // initialize commands
 const commands = [];
+const commandsByName = new Map();
+
+// always allow commands in these channels
+const defaultPermittedChannels = ["bot", "bot-testing"];
+
 client.commands = new Collection();
 const commandFiles = fs.readdirSync(`${__dirname}/commands`).filter(file => file.endsWith(".js"));
 
-for (const file of commandFiles) {
-  const command = require(`./commands/${file}`);
-  client.commands.set(command.data.name, command);
-  commands.push(command.data.toJSON());
+for (const fileName of commandFiles) {
+  const { data, execute, channels: permittedChannels = [] } = require(`./commands/${fileName}`);
+  const command = {
+    data,
+    execute,
+  };
+
+  client.commands.set(data.name, command);
+
+  if (!permittedChannels.length) {
+    // add default channels this command is allowed to be used in
+    permittedChannels.push(...defaultPermittedChannels);
+  }
+
+  commandsByName.set(data.name, {
+    command,
+    permittedChannels,
+  });
+  commands.push(data.toJSON());
 }
 
 const rest = new REST({ version: "10" }).setToken(token);
@@ -50,17 +70,23 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
-  const { commandName: command } = interaction;
-  if (!client.commands.has(command)) {
+  const { commandName } = interaction;
+  if (!client.commands.has(commandName)) {
     return;
   }
 
-  if (interaction.channelId !== channels["bot"] && interaction.channelId !== channels["bot-testing"]) {
+  const { permittedChannels } = commandsByName.get(commandName);
+
+  if (!permittedChannels.some(channelName => interaction.channelId === channels[channelName])) {
+    await interaction.reply({
+      content: `This command is only available in the following channels: ${permittedChannels.map(string => `"${string}"`).join(", ")}.`,
+      ephemeral: true,
+    });
     return;
   }
 
   try {
-    await client.commands.get(command).execute(interaction);
+    await client.commands.get(commandName).execute(interaction);
   }
   catch (error) {
     console.error(error);
