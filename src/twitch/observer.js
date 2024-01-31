@@ -11,7 +11,8 @@ const config = require(`${global.__root}/config.json`);
 const { twitch: { clientId, clientSecret, games } } = config;
 
 const streamEmitter = new EventEmitter();
-const streams = [];
+
+const streamsByUserId = new Map();
 
 const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 
@@ -22,73 +23,84 @@ const interval = 30 * 1000;
 
 let _initialCall = true;
 
+let mainChannel;
+client.once("ready", () => {
+  mainChannel = client.channels.cache.get(config.discord.channels["dustforce"]);
+});
+
 const sendWentLiveMessage = (stream, channel) => {
   channel.send(`<${stream.url}> just went live: ${stream.title}`).catch((error) => {
     console.error(error);
   });
 };
 
-let mainChannel;
-client.once("ready", () => {
-  mainChannel = client.channels.cache.get(config.discord.channels["dustforce"]);
-});
-
 const fetchStreams = async () => {
-  let data = null;
-  try {
-    ({ data = [] } = await apiClient.streams.getStreams({ "game": games }) || {});
-  }
-  catch (error) {
-    if (error.code !== "ETIMEDOUT") {
-      console.error(error);
+  // remove expired streams from the cache
+  for (const stream of streamsByUserId.values()) {
+    stream.timer -= interval;
+    if (stream.timer <= 0) {
+      streamsByUserId.delete(stream.userName);
     }
   }
 
-  if (data !== null) {
-    for (const stream of data) {
-      const streamExists = streams.findIndex(streamCache => streamCache.userName === stream.userName);
-      if (streamExists === -1) {
-        stream.url = `https://www.twitch.tv/${stream.userName}`;
-        stream.timer = expire;
-        streams.push(stream);
+  const { data = [] } = await apiClient.streams.getStreams({ "game": games }) || {};
+  if (data?.length) {
+    for (const helixStream of data) {
+      const { userId, userName, title } = helixStream;
 
-        if (!_initialCall) {
-          streamEmitter.emit("stream", stream);
-          sendWentLiveMessage(stream, mainChannel);
+      if (streamsByUserId.has(userId)) {
+        const cachedStream = streamsByUserId.get(userId);
+        if (cachedStream.title !== title) {
+          // replace with the new title
+          cachedStream.title = title;
         }
+
+        // reset the expiration timer
+        cachedStream.timer = expire;
+        continue;
       }
-      else {
-        streams[streamExists].timer = expire;
+
+      const stream = {
+        helixStream,
+        userId,
+        userName,
+        title,
+        url: `https://www.twitch.tv/${userName}`,
+        timer: expire,
+      };
+      streamsByUserId.set(userId, stream);
+
+      if (_initialCall) {
+        // only aggregate the streams on start-up, to prevent sending
+        // redundant duplicate messages on restart (with the assumption the
+        // bot sent "went-live" messages last it was online)
+        continue;
       }
+
+      streamEmitter.emit("newStream", stream);
+      sendWentLiveMessage(stream, mainChannel);
     }
-
-    for (const stream in streams) {
-      if (Object.prototype.hasOwnProperty.call(streams, stream)) {
-        // adjust the expiration timer
-        streams[stream].timer -= interval;
-        if (streams[stream].timer < 1) {
-          // remove streams from the cache that have not been live in some time
-          streams.splice(stream, 1);
-        }
-      }
-    }
-
-    // if (streams.length && _initialCall) {
-    //   // in case Dustbot was just started up, announce all streams that are
-    //   // currently live, in case Dustbot failed to do so previously, when it was
-    //   // presumably broken and needed to be restarted
-    //   let message = "Currently live:\n";
-    //   const messages = [];
-    //   for (const { title, url } of streams) {
-    //     messages.push(`<${url}> ${title}`);
-    //   }
-    //   message += messages.join("\n");
-
-    //   mainChannel.send(message).catch((error) => {
-    //     console.error(error);
-    //   });
-    // }
   }
+
+  /*
+  Uncomment to send a message on start-up with all live streams at the current
+  moment
+  */
+  // if (streamsByUserId.size && _initialCall) {
+  //   // in case Dustbot was just started up, announce all streams that are
+  //   // currently live, in case Dustbot failed to do so previously, when it was
+  //   // presumably broken and needed to be restarted
+  //   let message = "Currently live:\n";
+  //   const messages = [];
+  //   for (const { title, url } of streamsByUserId.values()) {
+  //     messages.push(`<${url}> ${title}`);
+  //   }
+  //   message += messages.join("\n");
+
+  //   mainChannel.send(message).catch((error) => {
+  //     console.error(error);
+  //   });
+  // }
 
   if (_initialCall) {
     _initialCall = false;
@@ -102,6 +114,6 @@ new SelfAdjustingInterval(fetchStreams, interval, (error) => {
 module.exports = {
   "newStream": streamEmitter,
   "getStreams": () => {
-    return streams;
+    return Array.from(streamsByUserId.values());
   },
 };
