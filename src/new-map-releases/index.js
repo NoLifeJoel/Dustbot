@@ -204,6 +204,10 @@ const sendMessages = async (maps) => {
     let currentString = "";
     const displayedTags = [];
     for (const tag of tags) {
+      if (!tag?.name) {
+        continue;
+      }
+
       if (tag.name.length > maxLength) {
         _reachedMax = true;
         continue;
@@ -383,6 +387,10 @@ const fetchAtlasData = async (atlasId) => {
     const _tags = $(".tag-area a");
     for (const tag of _tags) {
       const text = $(tag).text().replace(/\s/g, "-");
+
+      if (!text) {
+        continue;
+      }
 
       if (ignoreTags.includes(text.toLowerCase())) {
         _ignore = true;
