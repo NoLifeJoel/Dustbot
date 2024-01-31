@@ -14,7 +14,7 @@ const { cleanCache } = require("./expiration.js");
 const baseUrl = "http://atlas.dustforce.com/";
 const atlasDownloadUrl = "http://atlas.dustforce.com/gi/downloader.php?id=";
 
-const config = require("../../config.json");
+const config = require(`${global.__root}/config.json`);
 
 const dataPath = `${__dirname}/data.json`;
 let data = {};

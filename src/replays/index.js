@@ -10,7 +10,8 @@ const replayTools = require("./util.js");
 
 const { createTwitterMessage } = require("./twitter.js");
 
-const config = require("../../config.json");
+const configPath = `${global.__root}/config.json`;
+const config = require(configPath);
 
 const replayEmitter = new EventEmitter();
 
@@ -157,7 +158,7 @@ const updateNewestReplayId = async () => {
 
     if (replayId < config.replays.newest) {
       config.replays.newest = replayId;
-      fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
       break;
     }
   }
@@ -350,7 +351,7 @@ const processReplay = async (replayId) => {
   replayEmitter.emit("replay", replay);
 
   config.replays.lastProcessed = replayId;
-  fs.writeFileSync("config.json", JSON.stringify(config, null, 2));
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
   return replay;
 };

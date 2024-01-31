@@ -7,7 +7,7 @@ const client = require("../discord/client.js");
 
 const { SelfAdjustingInterval } = require("../util/interval.js");
 
-const config = require("../../config.json");
+const config = require(`${global.__root}/config.json`);
 const { twitch: { clientId, clientSecret, games } } = config;
 
 const streamEmitter = new EventEmitter();

@@ -5,7 +5,7 @@ const client = require("./client.js");
 const replayTools = require("../replays/util.js");
 const twitch = require("../twitch/observer.js");
 
-const config = require("../../config.json");
+const config = require(`${global.__root}/config.json`);
 
 const { discord: { channels }, autoVerify } = config;
 

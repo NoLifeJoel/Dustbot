@@ -2,7 +2,7 @@
 
 const { parseTime, characterToString, scoreToLetter } = require("./util.js");
 
-const config = require("../../config.json");
+const config = require(`${global.__root}/config.json`);
 
 // const twitter = new TwitterApi(config.twitter);
 

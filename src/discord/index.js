@@ -2,7 +2,7 @@ const fs = require("fs");
 
 const { Collection, Routes, REST, InteractionType, ActivityType } = require("discord.js");
 
-const config = require("../../config.json");
+const config = require(`${global.__root}/config.json`);
 const { discord: { token, clientId, channels }, autoVerify } = config;
 
 const client = require("./client.js");
