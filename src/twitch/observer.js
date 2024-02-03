@@ -39,7 +39,7 @@ const fetchStreams = async () => {
   for (const stream of streamsByUserId.values()) {
     stream.timer -= interval;
     if (stream.timer <= 0) {
-      streamsByUserId.delete(stream.userName);
+      streamsByUserId.delete(stream.userId);
     }
   }
 
