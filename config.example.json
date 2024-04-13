@@ -1,11 +1,8 @@
 {
   "discord": {
-    // Client token from the discord website in the developers section.
     "token": "STRING/TOKEN",
-    // Bot client ID
     "client_id": "STRING/ID",
     "channels": {
-      // Unique Discord channel IDs
       "dustforce": "276106941875355658",
       "races": "298677601881292800",
       "tasforce": "202307017581395968",
@@ -19,19 +16,14 @@
   },
 
   "twitch": {
-    // Client ID from the twitch website in the developers section.
     "clientId": "clientId",
-    // Client secret from the twitch website in the developers section.
     "clientSecret": "clientSecret",
     "games": [
-      // One of these is Dustforce, the other is Dustforce DX.
       "1436588895",
       "29093"
     ]
   },
-  "autoVerify" : [
-    // Array of Discord User ID's exempt from bot verification.
-  ],
+  "autoVerify" : [ ],
   "replays": {
     "newest": -14898651,
     "lastProcessed": -14898651
