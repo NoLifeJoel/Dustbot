@@ -1,6 +1,6 @@
 {
   "name": "Dustbot",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Posts twitch streams to discord, replay data to the discord & twitter.",
   "main": "src/index.js",
   "type": "commonjs",
@@ -9,18 +9,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NoLifeJoel/Dustbot.git"
+    "url": "git+https://github.com/ukkiez/Dustbot.git"
   },
   "author": "Joel Graves",
   "license": "Unlicense",
   "bugs": {
-    "url": "https://github.com/NoLifeJoel/Dustbot/issues"
+    "url": "https://github.com/ukkiez/Dustbot/issues"
   },
-  "homepage": "https://github.com/NoLifeJoel/Dustbot#readme",
+  "homepage": "https://github.com/ukkiez/Dustbot#readme",
   "dependencies": {
     "@twurple/api": "^5.1",
     "@twurple/auth": "^5.1",
-    "cheerio": "^1.0.0-rc.12",
     "discord.js": "^14.3.0",
     "needle": "^3.1.0",
     "twitter-api-v2": "^1.12.0"

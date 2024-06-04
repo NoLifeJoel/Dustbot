@@ -1,7 +1,6 @@
 const fs = require("fs");
 
 const needle = require("needle");
-const cheerio = require("cheerio");
 
 const { EmbedBuilder } = require("discord.js");
 
@@ -12,7 +11,7 @@ const { SelfAdjustingInterval } = require("../util/interval.js");
 const { cleanCache } = require("./expiration.js");
 
 const baseUrl = "http://atlas.dustforce.com/";
-const atlasDownloadUrl = "http://atlas.dustforce.com/gi/downloader.php?id=";
+const apiUrl = "http://df.hitboxteam.com/atlas/";
 
 const config = require(`${global.__root}/config.json`);
 
@@ -343,67 +342,40 @@ const checkAtlasStatus = async () => {
 };
 
 const fetchAtlasData = async (atlasId) => {
-  const response = await needle("get", `${baseUrl}${atlasId}`, {
+  const response = await needle("get", `${apiUrl}get_map.php?id=${atlasId}`, {
     timeout: 5000,
-    headers: {
-      "Content-Type": "text/html",
-    },
   });
 
-  response.setEncoding("utf8");
   if (response.statusCode === 200) {
-    const $ = cheerio.load(response.body);
 
-    let description = "";
-    let authorName = "???";
-    let authorAvatar = "";
+    const data = response.body;
 
-    const authorData = $(".qa-avatar-link");
-    if (!authorData.html()) {
-      // this page does not have any author data, and therefore must be a hidden
-      // map
+    if (data.type === undefined) {
+      // this map is unpublished (meaning someone clicked "publish" in-game, but
+      // never posted the map in their browser); mark it as such and treat it as
+      // hidden, as there is a chance that someone is currently in the process of
+      // publishing the map, and we just encountered it in the period where
+      // they're still filling in information and then actually saving the map
+      return {
+        _hidden: true,
+        _unpublished: true,
+      };
+    }
+
+    let description = data.content;
+    let authorName = data.username;
+    let avatarBlobId = data.avatarBlobId ? data.avatarBlobId : "3601416389886209189";
+    let authorAvatar = `${baseUrl}?qa=image&qa_blobid=${avatarBlobId}&qa_size=32.png`;
+
+    if (data.type === "Q_HIDDEN") {
       return {
         _hidden: true,
       };
     }
 
-    const authorLink = authorData.attr("href");
-    if (authorLink) {
-      authorName = authorLink.split("/").pop();
-      authorName = decodeURI(authorName);
-    }
-    const authorAvatarImageSrc = authorData.children(".qa-avatar-image").attr("src");
-    if (authorAvatarImageSrc) {
-      authorAvatar = `${baseUrl}${authorAvatarImageSrc.split("/").pop()}.png`;
-    }
+    const tags = data.tags;
 
-    const descriptionSpan = $(".map-description-contents").children(".entry-content");
-    if (descriptionSpan) {
-      description = descriptionSpan.text();
-    }
-
-    let _ignore = false;
-    const tags = [];
-    const _tags = $(".tag-area a");
-    for (const tag of _tags) {
-      const text = $(tag).text().replace(/\s/g, "-");
-
-      if (!text) {
-        continue;
-      }
-
-      if (ignoreTags.includes(text.toLowerCase())) {
-        _ignore = true;
-        break;
-      }
-
-      tags.push({
-        name: text,
-        href: `https://atlas.dustforce.com/tag/${encodeURI(text)}`,
-      });
-    }
-
-    if (_ignore) {
+    if (tags.some(tag => ignoreTags.includes(tag.toLowerCase()))) {
       // have Dustbot ignore this map; cache it as hidden for now, in case
       // someone removes the tag later, so Dustbot will pick it up again,
       // assuming it hasn't expired by that point; this is mostly for events
@@ -412,27 +384,19 @@ const fetchAtlasData = async (atlasId) => {
       };
     }
 
+    tags.forEach(function (tag, index) {
+      this[index] = {
+        "name": tag,
+        "href": `https://atlas.dustforce.com/tag/${encodeURI(tag)}`,
+      };
+    }, tags);
+
     return {
       _hidden: false,
       description,
       authorName,
       authorAvatar,
       tags,
-    };
-  }
-
-  // consume response data to free up memory
-  response.resume();
-
-  if (response.statusCode === 404) {
-    // this map is unpublished (meaning someone clicked "publish" in-game, but
-    // never posted the map in their browser); mark it as such and treat it as
-    // hidden, as there is a chance that someone is currently in the process of
-    // publishing the map, and we just encountered it in the period where
-    // they're still filling in information and then actually saving the map
-    return {
-      _hidden: true,
-      _unpublished: true,
     };
   }
 
@@ -547,36 +511,29 @@ const maybeUnhideCachedMaps = async (_onlyUnpublished = false) => {
 };
 
 const fetchNewMap = async (atlasId) => {
-  let filename;
   try {
-    const response = await needle("head", `${atlasDownloadUrl}${atlasId}`, {
+    const response = await needle("get", `${apiUrl}get_map.php?id=${atlasId}`, {
       timeout: 5000,
     });
+
+    const data = response.body;
 
     if (response.statusCode !== 200) {
       console.error(`Bad response: ${response.statusCode}`);
       return;
     }
 
-    if (!response.headers["content-length"]) {
+    if (data.error_id === 0) {
+      // Database is probably down or not functioning correctly. Theoretically this should never happen.
+      return;
+    }
+
+    if (data.error_id === 1) {
       // no map with this ID exists yet
       return;
     }
 
-    const header = response.headers["content-disposition"];
-    if (!header) {
-      console.error(`No headers found for map ID: "${atlasId}"`);
-      return;
-    }
-
-    const match = header.match(filenameRegex);
-    if (!match.length) {
-      console.error(`No filename found for map ID: "${atlasId}", with headers: `, response.headers["content-disposition"]);
-      return;
-    }
-
-    filename = match[1];
-    return filename;
+    return data.map_name;
   }
   catch (error) {
     console.error(error);
