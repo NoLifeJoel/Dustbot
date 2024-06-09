@@ -18,7 +18,7 @@ const authProvider = new ClientCredentialsAuthProvider(clientId, clientSecret);
 
 const apiClient = new ApiClient({ authProvider });
 
-const expire = 5 * 60 * 1000;
+const expire = 10 * 60 * 1000;
 const interval = 30 * 1000;
 
 let _initialCall = true;
