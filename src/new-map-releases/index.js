@@ -19,8 +19,6 @@ const dataPath = `${__dirname}/data.json`;
 let data = {};
 let { currentAtlasId, cache, queue } = data;
 
-const filenameRegex = /filename="(.+)"/;
-
 const writeData = (fields) => {
   return new Promise(resolve => {
     // ensure all deconstructed modified variables are always written
@@ -57,9 +55,9 @@ const unhideInterval = 1000 * 60 * 10;
 // want to wait a while sending the message once they're finished doing so
 const unhideUnpublishedInterval = 1000 * 60 * 5;
 
-// some maps that are visible get hidden afterwards by their author; if we see
-// this, delete the posted message for that map retroactively
-const retroactivelyHideInterval = 1000 * 60 * 5;
+// // some maps that are visible get hidden afterwards by their author; if we see
+// // this, delete the posted message for that map retroactively
+// const retroactivelyHideInterval = 1000 * 60 * 5;
 
 // keep track of timers (at 1fps), so we can execute all functions that write to
 // the JSON data file in sequence, to avoid potential issues with race
@@ -68,14 +66,14 @@ let queueTimer = 0;
 let cleanUpTimer = 0;
 let unhideTimer = 0;
 let unhideUnpublishedTimer = 0;
-let retroactivelyHideTimer = 0;
+// let retroactivelyHideTimer = 0;
 
 setInterval(() => {
   queueTimer += 1000;
   cleanUpTimer += 1000;
   unhideTimer += 1000;
   unhideUnpublishedTimer += 1000;
-  retroactivelyHideTimer += 1000;
+  // retroactivelyHideTimer += 1000;
 
   if (queueTimer >= (24 * 60 * 60 * 1000)) {
     queueTimer = 0;
@@ -89,9 +87,9 @@ setInterval(() => {
   if (unhideTimer >= (24 * 60 * 60 * 1000)) {
     unhideUnpublishedTimer = 0;
   }
-  if (unhideTimer >= (24 * 60 * 60 * 1000)) {
-    retroactivelyHideTimer = 0;
-  }
+  // if (unhideTimer >= (24 * 60 * 60 * 1000)) {
+  //   retroactivelyHideTimer = 0;
+  // }
 }, 1000);
 
 // keep a list of tags that will make Dustbot ignore the map entirely
@@ -347,10 +345,9 @@ const fetchAtlasData = async (atlasId) => {
   });
 
   if (response.statusCode === 200) {
+    const { body } = response;
 
-    const data = response.body;
-
-    if (data.type === undefined) {
+    if (body.type === undefined) {
       // this map is unpublished (meaning someone clicked "publish" in-game, but
       // never posted the map in their browser); mark it as such and treat it as
       // hidden, as there is a chance that someone is currently in the process of
@@ -362,18 +359,18 @@ const fetchAtlasData = async (atlasId) => {
       };
     }
 
-    let description = data.content;
-    let authorName = data.username;
-    let avatarBlobId = data.avatarBlobId ? data.avatarBlobId : "3601416389886209189";
-    let authorAvatar = `${baseUrl}?qa=image&qa_blobid=${avatarBlobId}&qa_size=32.png`;
+    const description = body.content;
+    const authorName = body.username;
+    const avatarBlobId = body.avatarBlobId ? body.avatarBlobId : "3601416389886209189";
+    const authorAvatar = `${baseUrl}?qa=image&qa_blobid=${avatarBlobId}&qa_size=32.png`;
 
-    if (data.type === "Q_HIDDEN") {
+    if (body.type === "Q_HIDDEN") {
       return {
         _hidden: true,
       };
     }
 
-    const tags = data.tags;
+    const { tags } = body;
 
     if (tags.some(tag => ignoreTags.includes(tag.toLowerCase()))) {
       // have Dustbot ignore this map; cache it as hidden for now, in case
@@ -384,12 +381,13 @@ const fetchAtlasData = async (atlasId) => {
       };
     }
 
-    tags.forEach(function (tag, index) {
-      this[index] = {
-        "name": tag,
-        "href": `https://atlas.dustforce.com/tag/${encodeURI(tag)}`,
-      };
-    }, tags);
+    const filteredTags = [];
+    for (const tag of tags) {
+      filteredTags.push({
+        name: tag,
+        href: `https://atlas.dustforce.com/tag/${encodeURI(tag)}`,
+      });
+    }
 
     return {
       _hidden: false,
@@ -516,24 +514,25 @@ const fetchNewMap = async (atlasId) => {
       timeout: 5000,
     });
 
-    const data = response.body;
+    const { body } = response;
 
     if (response.statusCode !== 200) {
       console.error(`Bad response: ${response.statusCode}`);
       return;
     }
 
-    if (data.error_id === 0) {
-      // Database is probably down or not functioning correctly. Theoretically this should never happen.
+    if (body.error_id === 0) {
+      // database is probably down or not functioning correctly; theoretically
+      // this should never happen
       return;
     }
 
-    if (data.error_id === 1) {
+    if (body.error_id === 1) {
       // no map with this ID exists yet
       return;
     }
 
-    return data.map_name;
+    return body.map_name;
   }
   catch (error) {
     console.error(error);
@@ -646,13 +645,13 @@ const work = async () => {
     await maybeUnhideCachedMaps(true);
   }
 
-  if (retroactivelyHideTimer >= retroactivelyHideInterval) {
-    retroactivelyHideTimer = 0;
+  // if (retroactivelyHideTimer >= retroactivelyHideInterval) {
+  //   retroactivelyHideTimer = 0;
 
-    // possible unhide maps that have been cached as unpublished, and in the
-    // meantime been reshown by the map author on Atlas
-    await retroactivelyHideMaps();
-  }
+  //   // possible hide maps that have it, and its message, cached and were
+  //   // considered visible before
+  //   await retroactivelyHideMaps();
+  // }
 
   if (queueTimer >= processQueueInterval) {
     queueTimer = 0;
@@ -678,7 +677,7 @@ const work = async () => {
     }
 
     try {
-      const filename = await fetchNewMap(atlasId);
+      const filename = await fetchNewMap(atlasId) + "-" + atlasId;
 
       if (!filename) {
         // we've reached the most recent map on Atlas, so stop fetching
@@ -725,7 +724,7 @@ client.once("ready", async (_client) => {
 
   await maybeUnhideCachedMaps();
 
-  await retroactivelyHideMaps();
+  // await retroactivelyHideMaps();
 
   if (queue.length) {
     // process the existing queue on startup
