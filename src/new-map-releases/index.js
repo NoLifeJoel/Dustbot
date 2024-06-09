@@ -394,7 +394,7 @@ const fetchAtlasData = async (atlasId) => {
       description,
       authorName,
       authorAvatar,
-      tags,
+      tags: filteredTags,
     };
   }
 
