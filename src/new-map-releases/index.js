@@ -532,7 +532,7 @@ const fetchNewMap = async (atlasId) => {
       return;
     }
 
-    return body.map_name;
+    return body.map_name + "-" + atlasId;
   }
   catch (error) {
     console.error(error);
@@ -677,7 +677,7 @@ const work = async () => {
     }
 
     try {
-      const filename = await fetchNewMap(atlasId) + "-" + atlasId;
+      const filename = await fetchNewMap(atlasId);
 
       if (!filename) {
         // we've reached the most recent map on Atlas, so stop fetching
