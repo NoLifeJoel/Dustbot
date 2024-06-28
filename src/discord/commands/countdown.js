@@ -32,5 +32,5 @@ module.exports = {
     }
   },
 
-  channels: ["races"],
+  channels: ["races", "rma-bracket"],
 };
