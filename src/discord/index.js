@@ -99,16 +99,21 @@ client.on("interactionCreate", async (interaction) => {
 
 // put new server members into the "holding" channel, and require them to type
 // "!verify", as an anti-bot measure
-client.on("guildMemberAdd", async (member) => {
-  if (member.guild.id === "83037671227658240") {
-    const holdingRole = member.guild.roles.cache.find((role) => role.name === "holding");
-    if (autoVerify.indexOf(member.id) === -1) {
-      const holdingChannel = member.guild.channels.cache.get(channels["holding"]);
-      member.roles.add(holdingRole);
-      holdingChannel.send(`<@${member.id}> type !verify to see the other channels. This is an anti-bot measure.`);
-    }
-  }
-});
+/**
+ * The amount of bots in the discord server has gone down drastically, and after a short discussion it has been decided to temporarily (maybe permanently) disable holding.
+ * Just turn it back on if it becomes a problem again.
+ *
+ * client.on("guildMemberAdd", async (member) => {
+ *   if (member.guild.id === "83037671227658240") {
+ *     const holdingRole = member.guild.roles.cache.find((role) => role.name === "holding");
+ *     if (autoVerify.indexOf(member.id) === -1) {
+ *       const holdingChannel = member.guild.channels.cache.get(channels["holding"]);
+ *       member.roles.add(holdingRole);
+ *       holdingChannel.send(`<@${member.id}> type !verify to see the other channels. This is an anti-bot measure.`);
+ *     }
+ *   }
+ * });
+ */
 
 client.login(token);
 
