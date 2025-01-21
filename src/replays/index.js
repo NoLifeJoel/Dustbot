@@ -1,4 +1,9 @@
 const needle = require("needle");
+
+needle.defaults({
+  "user-agent": "Dustbot/1.0"
+});
+
 const fs = require("fs");
 const EventEmitter = require("events");
 

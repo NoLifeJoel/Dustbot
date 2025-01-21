@@ -2,6 +2,10 @@ const fs = require("fs");
 
 const needle = require("needle");
 
+needle.defaults({
+  "user-agent": "Dustbot/1.0"
+});
+
 const { EmbedBuilder } = require("discord.js");
 
 const client = require("../discord/client.js");

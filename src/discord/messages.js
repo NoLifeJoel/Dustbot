@@ -1,5 +1,9 @@
 const needle = require("needle");
 
+needle.defaults({
+  "user-agent": "Dustbot/1.0"
+});
+
 const client = require("./client.js");
 
 const replayTools = require("../replays/util.js");
