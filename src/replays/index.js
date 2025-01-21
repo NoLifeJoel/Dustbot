@@ -1,7 +1,7 @@
 const needle = require("needle");
 
 needle.defaults({
-  "user-agent": "Dustbot/1.0"
+  "user_agent": "Dustbot/1.0"
 });
 
 const fs = require("fs");
@@ -439,7 +439,7 @@ client.once("ready", () => {
   leaderboardUpdatesChannel = client.channels.cache.get(config.discord.channels["leaderboard-updates"]);
 
   replayEmitter.on("replay", (replay) => {
-    // console.log(replay.rid);
+    console.log(replay.rid);
     for (const [key, value] of Object.entries(replay.dustbot)) {
       switch (key) {
         case "char_score":

@@ -1,7 +1,7 @@
 const needle = require("needle");
 
 needle.defaults({
-  "user-agent": "Dustbot/1.0"
+  "user_agent": "Dustbot/1.0"
 });
 
 const client = require("./client.js");
