@@ -365,7 +365,7 @@ const fetchAtlasData = async (atlasId) => {
 
     const description = body.content;
     const authorName = body.username;
-    const avatarBlobId = body.avatarBlobId ? body.avatarBlobId : "3601416389886209189";
+    const avatarBlobId = body.avatar_blob_id ? body.avatar_blob_id : "3601416389886209189";
     const authorAvatar = `${baseUrl}?qa=image&qa_blobid=${avatarBlobId}&qa_size=32.png`;
 
     if (body.type === "Q_HIDDEN") {
