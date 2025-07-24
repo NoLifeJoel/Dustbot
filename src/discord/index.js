@@ -3,7 +3,7 @@ const fs = require("fs");
 const { Collection, Routes, REST, InteractionType, ActivityType } = require("discord.js");
 
 const config = require(`${global.__root}/config.json`);
-const { discord: { token, clientId, channels }, autoVerify } = config;
+const { discord: { token, client_id, channels }, autoVerify } = config;
 
 const client = require("./client.js");
 
@@ -55,7 +55,7 @@ const rest = new REST({ version: "10" }).setToken(token);
 (async () => {
   try {
     await rest.put(
-      Routes.applicationCommands(clientId),
+      Routes.applicationCommands(client_id),
       { "body": commands },
     );
   }
