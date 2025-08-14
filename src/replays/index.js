@@ -13,8 +13,6 @@ const { SelfAdjustingInterval } = require("../util/interval.js");
 
 const replayTools = require("./util.js");
 
-const { createTwitterMessage } = require("./twitter.js");
-
 const configPath = `${global.__root}/config.json`;
 const config = require(configPath);
 
@@ -462,7 +460,7 @@ client.once("ready", () => {
             createDiscordMessage(replay, "Score", true, "all");
           }
           if (value.WR && replay["rank_all_score_ties"] === 0) {
-            createTwitterMessage(replay, "Score");
+            // This used to make a twitter message for WRs
           }
           break;
 
@@ -471,7 +469,7 @@ client.once("ready", () => {
             createDiscordMessage(replay, "Time", false, "all");
           }
           if (value.WR && replay["rank_all_time_ties"] === 0) {
-            createTwitterMessage(replay, "Time");
+            // This used to make a twitter message for WRs
           }
           break;
       }
