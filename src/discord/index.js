@@ -4,11 +4,12 @@ const { Collection, Routes, REST, InteractionType, ActivityType } = require("dis
 
 const config = require(`${global.__root}/config.json`);
 const { discord: { token, client_id, channels }, autoVerify } = config;
+const { SelfAdjustingInterval } = require("../util/interval.js");
 
 const client = require("./client.js");
 
 // set the bot's status to online, and the game it's playing to Dustforce
-client.once("ready", function setPlaying() {
+function setPlaying() {
   client.user.setPresence({
     "status": "online",
     "activities": [{
@@ -16,7 +17,12 @@ client.once("ready", function setPlaying() {
       "name": "Dustforce",
     }],
   });
-  setTimeout(setPlaying, 5 * 60 * 1000);
+}
+
+client.once("ready", () => {
+  new SelfAdjustingInterval(setPlaying, 5 * 60 * 1000, (error) => {
+    console.error(error, "Failed to set online/playing status.");
+  }).start();
 });
 
 // initialize commands
