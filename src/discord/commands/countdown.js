@@ -14,7 +14,7 @@ module.exports = {
 
     const seconds = options.getInteger("seconds") || 3;
 
-    const sleep = ms => new Promise(resolve => setTimeout(()=> resolve(), ms));
+    const sleep = ms => new Promise(resolve => setTimeout(() => resolve(), ms));
 
     await interaction.reply("Countdown initiated... Race starts on \"GO!\"");
     channel.sendTyping();

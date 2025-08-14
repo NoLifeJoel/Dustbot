@@ -13,7 +13,6 @@
       "bot-testing": "928129547784814613"
     }
   },
-
   "twitch": {
     "clientId": "clientId",
     "clientSecret": "clientSecret",
@@ -23,14 +22,7 @@
     ]
   },
   "replays": {
-    "newest": -14898651,
-    "lastProcessed": -14898651
-  },
-
-  "twitter": {
-    "appKey": "key",
-    "appSecret": "secret",
-    "accessToken": "token",
-    "accessSecret": "secret"
+    "newest": -16517951,
+    "lastProcessed": -16517951
   }
 }
