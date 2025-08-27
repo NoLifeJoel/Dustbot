@@ -1,5 +1,8 @@
-// Essentially a SetInterval alias that waits for the function to finish before starting the next call.
-// It logs the amount of time it took to call the function, and subtracts it from the interval.
+/**
+ * Essentially a SetInterval alias that waits for the function to
+ * finish before starting the next call. It logs the amount of time
+ * it took to call the function, and subtracts it from the interval.
+ */
 class SelfAdjustingInterval {
 	constructor (func, interval, callback) {
 		if (typeof func !== 'function') {

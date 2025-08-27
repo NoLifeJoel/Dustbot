@@ -362,13 +362,11 @@ const processReplay = async (replayId) => {
 const processReplays = async () => {
   try {
     await processReplay(config.replays.lastProcessed - 1);
-  }
-  catch (error) {
+  } catch (error) {
     if (error.message === "Replay not found.") {
       config.replays.lastProcessed--;
-    }
-    else {
-      await sleep(10 * 1000);
+    } else {
+      await sleep(60 * 1000);
       if (error.code !== "ECONNRESET" && error.message !== "query timed out.") {
         console.error(error);
       }
@@ -380,7 +378,7 @@ const processReplays = async () => {
   }
 };
 
-new SelfAdjustingInterval(processReplays, 2000, (error) => {
+new SelfAdjustingInterval(processReplays, 5 * 1000, (error) => {
   console.error(error, "failed to process replays.");
 }).start();
 

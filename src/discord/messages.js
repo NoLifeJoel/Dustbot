@@ -217,4 +217,14 @@ client.on("messageCreate", async (message) => {
       }
     }
   }
+  if (message.channel.id === channels["holding"]) {
+    // have new users send a "!verify" message when they join the server
+    const holdingRole = message.member.guild.roles.cache.find((role) => role.name === "holding");
+    if (message.content.toLowerCase() === "!verify" && message.member.roles.cache.has(holdingRole.id)) {
+      message.member.roles.remove(holdingRole);
+      if (autoVerify.indexOf(message.member.id) === -1) {
+        autoVerify.push(message.member.id);
+      }
+    }
+  }
 });

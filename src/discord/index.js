@@ -103,6 +103,20 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
+// put new server members into the "holding" channel, and require them to type
+// "!verify", as an anti-bot measure
+
+client.on("guildMemberAdd", async (member) => {
+  if (member.guild.id === "83037671227658240") {
+    const holdingRole = member.guild.roles.cache.find((role) => role.name === "holding");
+    if (autoVerify.indexOf(member.id) === -1) {
+      const holdingChannel = member.guild.channels.cache.get(channels["holding"]);
+      member.roles.add(holdingRole);
+      holdingChannel.send(`<@${member.id}> type !verify to see the other channels. This is an anti-bot measure.`);
+    }
+  }
+});
+
 client.login(token);
 
 require("./messages.js");

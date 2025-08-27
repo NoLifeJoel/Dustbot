@@ -10,7 +10,8 @@
       "bot": "871499721850621962",
       "leaderboard-updates": "204159286966747136",
       "new-map-releases": "1072244277641498694",
-      "bot-testing": "928129547784814613"
+      "bot-testing": "928129547784814613",
+      "holding": "1410348402885001316"
     }
   },
   "twitch": {
@@ -24,5 +25,6 @@
   "replays": {
     "newest": -16517951,
     "lastProcessed": -16517951
-  }
+  },
+  "autoVerify": []
 }

@@ -20,7 +20,7 @@ const apiUrl = "http://df.hitboxteam.com/atlas/";
 const config = require(`${global.__root}/config.json`);
 
 const dataPath = `${__dirname}/data.json`;
-let data = {};
+let data = { };
 let { currentAtlasId, cache, queue } = data;
 
 const writeData = (fields) => {
