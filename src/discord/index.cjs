@@ -4,9 +4,9 @@ const { Collection, Routes, REST, InteractionType, ActivityType } = require("dis
 
 const config = require(`${global.__root}/config.json`);
 const { discord: { token, client_id, channels }, autoVerify } = config;
-const { SelfAdjustingInterval } = require("../util/interval.js");
+const { SelfAdjustingInterval } = require("../util/interval.cjs");
 
-const client = require("./client.js");
+const client = require("./client.cjs");
 
 // set the bot's status to online, and the game it's playing to Dustforce
 function setPlaying() {
@@ -33,7 +33,7 @@ const commandsByName = new Map();
 const defaultPermittedChannels = ["bot", "bot-testing"];
 
 client.commands = new Collection();
-const commandFiles = fs.readdirSync(`${__dirname}/commands`).filter(file => file.endsWith(".js"));
+const commandFiles = fs.readdirSync(`${__dirname}/commands`).filter(file => file.endsWith(".cjs"));
 
 for (const fileName of commandFiles) {
   const { data, execute, channels: permittedChannels = [] } = require(`./commands/${fileName}`);
@@ -119,4 +119,4 @@ client.on("guildMemberAdd", async (member) => {
 
 client.login(token);
 
-require("./messages.js");
+require("./messages.cjs");

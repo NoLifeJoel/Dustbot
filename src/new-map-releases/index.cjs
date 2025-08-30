@@ -8,11 +8,11 @@ needle.defaults({
 
 const { EmbedBuilder } = require("discord.js");
 
-const client = require("../discord/client.js");
+const client = require("../discord/client.cjs");
 
-const { SelfAdjustingInterval } = require("../util/interval.js");
+const { SelfAdjustingInterval } = require("../util/interval.cjs");
 
-const { cleanCache } = require("./expiration.js");
+const { cleanCache } = require("./expiration.cjs");
 
 const baseUrl = "http://atlas.dustforce.com/";
 const apiUrl = "http://df.hitboxteam.com/atlas/";

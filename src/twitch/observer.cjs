@@ -3,9 +3,9 @@ const EventEmitter = require("events");
 const { ApiClient } = require("@twurple/api");
 const { ClientCredentialsAuthProvider } = require("@twurple/auth");
 
-const client = require("../discord/client.js");
+const client = require("../discord/client.cjs");
 
-const { SelfAdjustingInterval } = require("../util/interval.js");
+const { SelfAdjustingInterval } = require("../util/interval.cjs");
 
 const config = require(`${global.__root}/config.json`);
 const { twitch: { clientId, clientSecret, games } } = config;

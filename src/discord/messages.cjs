@@ -4,10 +4,10 @@ needle.defaults({
   "user_agent": "Dustbot/1.0"
 });
 
-const client = require("./client.js");
+const client = require("./client.cjs");
 
-const replayTools = require("../replays/util.js");
-const twitch = require("../twitch/observer.js");
+const replayTools = require("../replays/util.cjs");
+const twitch = require("../twitch/observer.cjs");
 
 const config = require(`${global.__root}/config.json`);
 

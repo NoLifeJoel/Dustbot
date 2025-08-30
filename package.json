@@ -2,8 +2,7 @@
   "name": "Dustbot",
   "version": "1.4.2",
   "description": "Posts twitch streams to discord, and replay data to the discord.",
-  "main": "src/index.js",
-  "type": "commonjs",
+  "main": "src/index.cjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

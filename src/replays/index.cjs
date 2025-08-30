@@ -7,11 +7,11 @@ needle.defaults({
 const fs = require("fs");
 const EventEmitter = require("events");
 
-const client = require("../discord/client.js");
+const client = require("../discord/client.cjs");
 
-const { SelfAdjustingInterval } = require("../util/interval.js");
+const { SelfAdjustingInterval } = require("../util/interval.cjs");
 
-const replayTools = require("./util.js");
+const replayTools = require("./util.cjs");
 
 const configPath = `${global.__root}/config.json`;
 const config = require(configPath);
