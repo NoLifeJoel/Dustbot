@@ -1,30 +1,19 @@
 {
-  "discord": {
-    "token": "STRING/TOKEN",
-    "client_id": "STRING/ID",
-    "channels": {
-      "dustforce": "276106941875355658",
-      "races": "298677601881292800",
-      "tasforce": "202307017581395968",
-      "mapmaking": "275015117236731905",
-      "bot": "871499721850621962",
-      "leaderboard-updates": "204159286966747136",
-      "new-map-releases": "1072244277641498694",
-      "bot-testing": "928129547784814613",
-      "holding": "1410348402885001316"
-    }
-  },
-  "twitch": {
-    "clientId": "clientId",
-    "clientSecret": "clientSecret",
-    "games": [
-      "1436588895",
-      "29093"
-    ]
-  },
-  "replays": {
-    "newest": -16517951,
-    "lastProcessed": -16517951
-  },
-  "autoVerify": []
+	"discord": {
+		"token": "string",
+		"clientId": "string"
+	},
+	"twitch": {
+		"clientId": "clientId",
+		"clientSecret": "clientSecret",
+		"games": [
+			"1436588895",
+			"29093"
+		]
+	},
+	"mysql": {
+		"server": "localhost",
+		"username": "dustbot",
+		"password": "password"
+	}
 }
