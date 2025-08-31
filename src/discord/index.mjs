@@ -21,4 +21,15 @@ client.on(Events.ClientReady, (readyClient) => {
 	});
 });
 
+client.on(Events.MessageCreate, async (message) => {
+	if (message.author.bot) return;
+	if (message.content.indexOf("dustkid.com/replay/") !== -1) {
+		const replayId = Number(message.content.split("dustkid.com/replay/")[1].split(/ |\n/)[0].replace(/[^0-9-]/g, ""));
+		if (typeof replayId === "number" && !isNaN(replayId)) {
+			// TODO: Check if replay exists in DB, and if so don't fetch from Dustkid.
+			// Ideally all the logic for fetching a replay from db/dustkid should be in a replays module.
+		}
+	}
+});
+
 client.login(config.discord.token);

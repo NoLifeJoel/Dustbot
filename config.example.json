@@ -12,8 +12,9 @@
 		]
 	},
 	"mysql": {
-		"server": "localhost",
-		"username": "dustbot",
+		"host": "localhost",
+		"user": "dustbot",
 		"password": "password"
-	}
+	},
+	"userAgent": "Dustbot/1.5.0"
 }
