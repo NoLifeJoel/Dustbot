@@ -30,8 +30,7 @@ module.exports = {
         await interaction.member.roles[type](role).then(async () => {
           await interaction.reply(`${(type === "remove" ? "Removed" : "Added")} \`${role.name}\` role.`);
         }).catch(e => console.error(e));
-      }
-      else {
+      } else {
         await interaction.reply(`${role.name} is not an available role.`);
       }
     };

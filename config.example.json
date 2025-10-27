@@ -14,7 +14,9 @@
 	"mysql": {
 		"host": "localhost",
 		"user": "dustbot",
-		"password": "password"
+		"password": "password",
+		"schema": "dustbot"
 	},
-	"userAgent": "Dustbot/1.5.0"
+	"userAgent": "Dustbot/1.5.0",
+	"production": false
 }

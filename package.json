@@ -1,8 +1,9 @@
 {
 	"name": "Dustbot",
 	"version": "1.5.0",
-	"description": "Posts Dustforce twitch streams and Dustforce replay data to configured channels in discord.",
+	"description": "Posts twitch streams and Dustforce replay data to configured channels in discord.",
 	"main": "src/index.mjs",
+	"type": "module",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},

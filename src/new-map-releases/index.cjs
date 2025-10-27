@@ -29,7 +29,7 @@ const writeData = (fields) => {
     fs.writeFileSync(dataPath, JSON.stringify({
       ...data,
       currentAtlasId,
-      cache: { ...cache },
+      cache: {...cache},
       queue: [...queue],
 
       ...fields,

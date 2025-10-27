@@ -4,38 +4,42 @@ import config from './../../config.json' with { type: 'json' };
 let session = await mysqlx.getSession({
 	"host": config.mysql.host,
 	"user": config.mysql.user,
-	"password": config.mysql.password
+	"password": config.mysql.password,
+	"schema": config.mysql.schema
 });
 
-await session.sql(`CREATE TABLE IF NOT EXISTS dustbot.replays(
+await session.sql(`CREATE TABLE IF NOT EXISTS replays(
 	dustkidID INT PRIMARY KEY,
-	hitboxID INT,
-	completion TINYINT,
-	finesse TINYINT,
-	user INT,
-	levelName VARCHAR(64),
-	characterID TINYINT,
-	timestamp INT,
-	validated TINYINT,
-	dustkid TINYINT,
+	hitboxID INT DEFAULT 0,
+	completion TINYINT NOT NULL,
+	finesse TINYINT NOT NULL,
+	user INT NOT NULL,
+	levelName VARCHAR(64) NOT NULL,
+	levelID INT NOT NULL,
+	characterID TINYINT NOT NULL,
+	timestamp INT NOT NULL,
+	validated TINYINT NOT NULL,
+	dustkid TINYINT DEFAULT 1,
 	pluginID SMALLINT,
-	input_jumps MEDIUMINT,
-	input_dashes MEDIUMINT,
-	input_lights MEDIUMINT,
-	input_heavies MEDIUMINT,
-	input_super MEDIUMINT,
-	input_directions MEDIUMINT,
-	num_players TINYINT,
-	pb TINYINT(1)
+	input_jumps MEDIUMINT NOT NULL,
+	input_dashes MEDIUMINT NOT NULL,
+	input_lights MEDIUMINT NOT NULL,
+	input_heavies MEDIUMINT NOT NULL,
+	input_super MEDIUMINT NOT NULL,
+	input_directions MEDIUMINT NOT NULL,
+	num_players TINYINT NOT NULL,
+	pb TINYINT(1) DEFAULT 0,
+	UNIQUE (hitboxID)
 )`).execute();
 
-await session.sql(`CREATE TABLE IF NOT EXISTS dustbot.levels(
+await session.sql(`CREATE TABLE IF NOT EXISTS levels(
 	id INT PRIMARY KEY,
 	name VARCHAR(64),
-	clean_name VARCHAR(64)
+	clean_name VARCHAR(64),
+	hxID INT
 )`).execute();
 
-await session.sql(`CREATE TABLE IF NOT EXISTS dustbot.users(
+await session.sql(`CREATE TABLE IF NOT EXISTS users(
 	id INT PRIMARY KEY,
 	name VARCHAR(64)
 )`).execute();
