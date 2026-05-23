@@ -318,6 +318,13 @@ const sendMessages = async (maps) => {
               disabled: false,
               type: 2,
             },
+            {
+              style: 5,
+              label: "Install & Play",
+              url: `https://atlas.dustforce.com/gi/install_play.php?m=${atlasId}/${filename.slice(0, filename.lastIndexOf("-"))}`,
+              disabled: false,
+              type: 2,
+            },
           ],
         },
       ],
