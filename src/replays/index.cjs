@@ -215,6 +215,11 @@ const processReplay = async (replayId) => {
   replay.dustbot = {};
   if (replay && replay.validated && replayTools.level_thumbnails[replay.level] && replay.user > -1) {
     // replay is validated, part of the base game, and not multiplayer.
+    if (replay["rank_all_score"] === -1 && replay["rank_all_time"] === -1) {
+      console.log("Dustkid appears to be under maintenance, waiting 10 minutes... (Ranks show as -1)");
+      await sleep(10 * 60 * 1000);
+      return null;
+    }
     if (replay.pb && (replay.rank_all_score < 10 || replay.rank_all_time < 10 || replay.level === "yottadifficult" || replay.level === "exec func ruin user")) {
       let pbHistory = await needle("get", `https://dustkid.com/json/levelstats/${encodeURIComponent(replay.level)}/${replay.user}/${encodeURIComponent(replay.username)}`, {
         parse: "json",
